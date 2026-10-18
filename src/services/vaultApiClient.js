@@ -168,5 +168,43 @@ export const vaultApiClient = {
     return await apiRequest(`/caregiver/memories/${memoryId}`, {
       method: 'DELETE'
     });
+  },
+
+  // Phase 7: Constrained AI Endpoints
+  async getAiStatus() {
+    try {
+      return await apiRequest('/ai/status');
+    } catch (e) {
+      return { available: false, error: e.message };
+    }
+  },
+
+  async simplifyInstructions(gameId, originalRules) {
+    try {
+      return await apiRequest('/ai/simplify-instructions', {
+        method: 'POST',
+        body: JSON.stringify({ gameId, originalRules })
+      });
+    } catch (e) {
+      return { text: originalRules, source: 'offline_fallback' };
+    }
+  },
+
+  async explainFact(factText, category) {
+    try {
+      return await apiRequest('/ai/explain-fact', {
+        method: 'POST',
+        body: JSON.stringify({ factText, category })
+      });
+    } catch (e) {
+      return { text: factText, source: 'offline_fallback' };
+    }
+  },
+
+  async draftCaregiverStory({ notes, people, location, period }) {
+    return await apiRequest('/ai/draft-story', {
+      method: 'POST',
+      body: JSON.stringify({ notes, people, location, period })
+    });
   }
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
 import { vaultApiClient } from '../../services/vaultApiClient.js';
+import { voiceService } from '../../services/voiceService.js';
 
 export function MemoryVaultView({ onExit }) {
   const [memories, setMemories] = useState([]);
@@ -246,16 +247,46 @@ export function MemoryVaultView({ onExit }) {
         {/* Narrative & Context Details */}
         <div style={{ padding: '32px' }}>
           {current.title && (
-            <h2
-              style={{
-                fontSize: 'var(--font-h1)',
-                color: 'var(--text-primary)',
-                marginBottom: '12px',
-                fontWeight: 'bold'
-              }}
-            >
-              {current.title}
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h2
+                style={{
+                  fontSize: 'var(--font-h1)',
+                  color: 'var(--text-primary)',
+                  margin: 0,
+                  fontWeight: 'bold'
+                }}
+              >
+                {current.title}
+              </h2>
+              <button
+                type="button"
+                onClick={() => {
+                  if (voiceService.isSpeaking) {
+                    voiceService.stop();
+                  } else {
+                    const speechText = `${current.title}. ${current.story || ''}`;
+                    voiceService.speak(speechText);
+                  }
+                }}
+                aria-label="Listen to memory caption read aloud"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-surface-elevated)',
+                  color: 'var(--text-primary)',
+                  fontWeight: 'bold',
+                  fontSize: 'calc(var(--font-base) * 0.85)',
+                  cursor: 'pointer'
+                }}
+              >
+                <AccessibleIcon name="volume" size={18} />
+                <span>Read Story</span>
+              </button>
+            </div>
           )}
 
           {current.story && (

@@ -18,9 +18,29 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
   const [consentAcknowledged, setConsentAcknowledged] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isDraftingAi, setIsDraftingAi] = useState(false);
   const [error, setError] = useState(null);
 
   if (!isOpen) return null;
+
+  const handleDraftWithAi = async () => {
+    setIsDraftingAi(true);
+    try {
+      const res = await vaultApiClient.draftCaregiverStory({
+        notes: caregiverNotes,
+        people: personName ? `${personName} ${relationship ? `(${relationship})` : ''}` : '',
+        location,
+        period: approximatePeriod
+      });
+      if (res && res.text) {
+        setStory(res.text);
+      }
+    } catch (e) {
+      console.warn('AI drafting unavailable:', e);
+    } finally {
+      setIsDraftingAi(false);
+    }
+  };
 
   const handleFileChange = e => {
     const selected = e.target.files?.[0];
@@ -231,12 +251,35 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
 
           {/* Story / Gentle Prompt */}
           <div style={{ marginBottom: '16px' }}>
-            <label
-              htmlFor="memory-story"
-              style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
-            >
-              Gentle Story / Orientation Prompt (Max 300 chars)
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label
+                htmlFor="memory-story"
+                style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}
+              >
+                Gentle Story / Orientation Prompt (Max 300 chars)
+              </label>
+              <button
+                type="button"
+                onClick={handleDraftWithAi}
+                disabled={isDraftingAi}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--accent-soft)',
+                  color: 'var(--accent-color)',
+                  fontSize: 'calc(var(--font-base) * 0.8)',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                <AccessibleIcon name="sparkles" size={14} />
+                <span>{isDraftingAi ? 'Drafting...' : 'Draft with AI'}</span>
+              </button>
+            </div>
             <textarea
               id="memory-story"
               value={story}

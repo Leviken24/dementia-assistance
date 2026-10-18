@@ -8,6 +8,8 @@ import {
 import { AccessibleIcon } from '../../components/common/AccessibleIcons.jsx';
 import { BigButton } from '../../components/common/BigButton.jsx';
 import { storageService } from '../../services/storageService.js';
+import { voiceService } from '../../services/voiceService.js';
+import { vaultApiClient } from '../../services/vaultApiClient.js';
 
 export function MemoryMatchView({ onComplete, onExit }) {
   const initialPairCount =
@@ -16,6 +18,23 @@ export function MemoryMatchView({ onComplete, onExit }) {
   const [state, setState] = useState(() => createInitialState(initialPairCount));
   const [statusMessage, setStatusMessage] = useState('Tap any card to turn it over.');
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [simplifiedRules, setSimplifiedRules] = useState(null);
+  const [isSimplifying, setIsSimplifying] = useState(false);
+
+  const handleSimplifyRules = async () => {
+    setIsSimplifying(true);
+    try {
+      const res = await vaultApiClient.simplifyInstructions(
+        'memory-match',
+        'Turn over cards to find matching pairs of familiar nature pictures.'
+      );
+      setSimplifiedRules(res.text);
+    } catch (e) {
+      setSimplifiedRules('Turn over two cards at a time to find flowers that look the same.');
+    } finally {
+      setIsSimplifying(false);
+    }
+  };
 
   // Reference for mismatch delay timer to guarantee safe cleanup on restart or unmount
   const mismatchTimerRef = useRef(null);
@@ -150,12 +169,66 @@ export function MemoryMatchView({ onComplete, onExit }) {
         </div>
       </div>
 
+      {/* Optional AI Simplified Rules Banner */}
+      {simplifiedRules && (
+        <div
+          role="region"
+          aria-label="Simplified instructions"
+          style={{
+            backgroundColor: 'var(--accent-soft)',
+            border: '2px solid var(--accent-color)',
+            borderRadius: '12px',
+            padding: '14px 20px',
+            marginBottom: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AccessibleIcon name="sparkles" size={20} />
+            <span style={{ fontSize: 'var(--font-base)', color: 'var(--text-primary)', fontWeight: 'bold' }}>
+              {simplifiedRules}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (voiceService.isSpeaking) {
+                voiceService.stop();
+              } else {
+                voiceService.speak(simplifiedRules);
+              }
+            }}
+            aria-label="Listen to rules read aloud"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-surface)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: 'bold',
+              fontSize: 'calc(var(--font-base) * 0.85)'
+            }}
+          >
+            <AccessibleIcon name="volume" size={18} />
+            <span>Read</span>
+          </button>
+        </div>
+      )}
+
       {/* Gentle Live Status Message */}
       <div
         role="status"
         aria-live="polite"
         style={{
-          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           padding: '12px 16px',
           backgroundColor: 'var(--bg-surface-elevated)',
           borderRadius: '10px',
@@ -166,7 +239,28 @@ export function MemoryMatchView({ onComplete, onExit }) {
           marginBottom: '24px'
         }}
       >
-        {statusMessage}
+        <span>{statusMessage}</span>
+        {!simplifiedRules && (
+          <button
+            type="button"
+            onClick={handleSimplifyRules}
+            disabled={isSimplifying}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent-color)',
+              fontWeight: 'bold',
+              fontSize: 'calc(var(--font-base) * 0.85)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <AccessibleIcon name="sparkles" size={16} />
+            <span>{isSimplifying ? 'Simplifying...' : 'Simpler Rules?'}</span>
+          </button>
+        )}
       </div>
 
       {/* Responsive Card Grid */}

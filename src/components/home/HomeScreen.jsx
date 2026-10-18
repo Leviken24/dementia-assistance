@@ -50,6 +50,13 @@ const ACTIVITIES = [
     description: 'Take a peaceful pause with a comforting thought or discover a fascinating little fact about nature and the world.',
     icon: 'bloom',
     buttonLabel: 'Enjoy a Gentle Moment'
+  },
+  {
+    id: 'memory-vault',
+    title: 'My Memory Album',
+    description: 'Enjoy peaceful family photographs and cherished memories together at your own comfortable pace.',
+    icon: 'camera',
+    buttonLabel: 'Open Memory Album'
   }
 ];
 

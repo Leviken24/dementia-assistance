@@ -10,6 +10,9 @@ import { GentleMomentsView } from './components/gentle-moments/GentleMomentsView
 import { ActivityHistoryView } from './components/history/ActivityHistoryView.jsx';
 import { RemindersView } from './components/reminders/RemindersView.jsx';
 import { ReminderNotificationModal } from './components/reminders/ReminderNotificationModal.jsx';
+import { MemoryVaultView } from './components/vault/MemoryVaultView.jsx';
+import { CaregiverDashboard } from './components/caregiver/CaregiverDashboard.jsx';
+import { CaregiverGateModal } from './components/caregiver/CaregiverGateModal.jsx';
 import { CompletionScreen } from './components/common/CompletionScreen.jsx';
 import { storageService } from './services/storageService.js';
 import { evaluatePacingRecommendation } from './services/personalizationEngine.js';
@@ -72,6 +75,7 @@ export function App() {
   const [currentView, setCurrentView] = useState('home');
   const [lastGameResult, setLastGameResult] = useState(null);
   const [activeDueReminder, setActiveDueReminder] = useState(null);
+  const [showCaregiverGate, setShowCaregiverGate] = useState(false);
 
   // Poll for due reminders every 5 seconds without disturbing current activity
   useEffect(() => {
@@ -151,6 +155,10 @@ export function App() {
         return 'Activity Journal';
       case 'reminders':
         return 'My Daily Reminders';
+      case 'memory-vault':
+        return 'My Memory Album';
+      case 'caregiver':
+        return 'Caregiver Portal';
       case 'completed':
         return 'Activity Complete';
       case 'home':
@@ -212,6 +220,7 @@ export function App() {
         title={getHeaderTitle()}
         showBack={currentView !== 'home'}
         onBack={handleReturnHome}
+        onOpenCaregiver={() => setShowCaregiverGate(true)}
         backLabel={
           currentView === 'gentle-moments'
             ? 'Leave Gentle Moment'
@@ -219,6 +228,10 @@ export function App() {
             ? 'Leave Journal'
             : currentView === 'reminders'
             ? 'Leave Reminders'
+            : currentView === 'memory-vault'
+            ? 'Leave Album'
+            : currentView === 'caregiver'
+            ? 'Exit Caregiver'
             : 'Leave Game'
         }
       />
@@ -282,6 +295,18 @@ export function App() {
             />
           )}
 
+          {currentView === 'memory-vault' && (
+            <MemoryVaultView onExit={handleReturnHome} />
+          )}
+
+          {currentView === 'caregiver' && (
+            <CaregiverDashboard
+              onExit={handleReturnHome}
+              onManageReminders={() => setCurrentView('reminders')}
+              onViewHistory={() => setCurrentView('history')}
+            />
+          )}
+
           {currentView === 'completed' && lastGameResult && (
             <CompletionScreen
               title={completionDetails.title}
@@ -297,6 +322,16 @@ export function App() {
           )}
         </FriendlyErrorBoundary>
       </main>
+
+      {/* Caregiver PIN / Password Gate Modal */}
+      <CaregiverGateModal
+        isOpen={showCaregiverGate}
+        onClose={() => setShowCaregiverGate(false)}
+        onSuccess={() => {
+          setShowCaregiverGate(false);
+          setCurrentView('caregiver');
+        }}
+      />
 
       {/* Gentle Due Reminder In-App Alert Modal */}
       {activeDueReminder && (

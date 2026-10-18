@@ -7,7 +7,8 @@ export function Header({
   title,
   showBack = false,
   onBack,
-  backLabel = 'Back to Home'
+  backLabel = 'Back to Home',
+  onOpenCaregiver
 }) {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -71,7 +72,30 @@ export function Header({
           </h1>
         </div>
 
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {onOpenCaregiver && (
+            <button
+              onClick={onOpenCaregiver}
+              aria-label="Caregiver Dashboard Portal"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-surface-elevated)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--border-color)',
+                fontSize: 'var(--font-base)',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              <AccessibleIcon name="lock" size={22} />
+              <span>Caregiver</span>
+            </button>
+          )}
+
           <button
             onClick={() => setShowSettingsModal(true)}
             aria-label="Display and Accessibility Settings"

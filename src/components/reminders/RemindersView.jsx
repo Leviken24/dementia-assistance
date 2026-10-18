@@ -164,7 +164,7 @@ export function RemindersView({ onExit }) {
             Add a Reminder
           </BigButton>
 
-          {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
+          {notificationPermission === 'default' && (
             <BigButton
               variant="secondary"
               onClick={handleRequestNotifications}
@@ -173,6 +173,44 @@ export function RemindersView({ onExit }) {
             >
               Enable Browser Alerts
             </BigButton>
+          )}
+
+          {notificationPermission === 'granted' && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '10px 16px',
+                borderRadius: '10px',
+                backgroundColor: '#D1FAE5',
+                color: '#065F46',
+                fontSize: 'calc(var(--font-base) * 0.9)',
+                fontWeight: 'bold'
+              }}
+            >
+              <AccessibleIcon name="check" size={20} />
+              <span>Browser Alerts Active</span>
+            </div>
+          )}
+
+          {notificationPermission === 'denied' && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '10px 16px',
+                borderRadius: '10px',
+                backgroundColor: '#FEF3C7',
+                color: '#92400E',
+                fontSize: 'calc(var(--font-base) * 0.85)',
+                fontWeight: '600'
+              }}
+            >
+              <AccessibleIcon name="bell" size={18} />
+              <span>Browser alerts blocked in settings (in-app alerts active)</span>
+            </div>
           )}
 
           <BigButton
@@ -356,12 +394,35 @@ export function RemindersView({ onExit }) {
                         <div
                           style={{
                             marginTop: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
                             fontSize: 'calc(var(--font-base) * 0.85)',
                             color: '#D97706',
                             fontWeight: 'bold'
                           }}
                         >
-                          Snoozed until {new Date(rem.snoozedUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                          <span>Snoozed until {new Date(rem.snoozedUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              storageService.dismissReminder(rem.id);
+                              refreshReminders();
+                              showTemporaryFeedback('Snooze cleared.');
+                            }}
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid #D97706',
+                              backgroundColor: '#FEF3C7',
+                              color: '#92400E',
+                              cursor: 'pointer',
+                              fontSize: 'calc(var(--font-base) * 0.75)',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            Clear Snooze
+                          </button>
                         </div>
                       )}
                     </div>

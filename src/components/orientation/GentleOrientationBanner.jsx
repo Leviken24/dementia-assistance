@@ -19,10 +19,11 @@ export function GentleOrientationBanner({ onManageReminders }) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [reminders, setReminders] = useState(() => storageService.getReminders());
 
-  // Refresh clock every 10 seconds to keep minutes current
+  // Refresh clock and reminder queue every 10 seconds to keep orientation current
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+      setReminders(storageService.getReminders());
     }, 10000);
     return () => clearInterval(timer);
   }, []);

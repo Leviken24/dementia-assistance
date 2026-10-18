@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AccessibleIcon } from './AccessibleIcons.jsx';
 import { BigButton } from './BigButton.jsx';
 import { AccessibilityModal } from '../accessibility/AccessibilityModal.jsx';
+import { useFocusTrap } from './useFocusTrap.js';
 
 export function Header({
   title,
@@ -12,6 +13,8 @@ export function Header({
 }) {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const confirmModalRef = useFocusTrap(showExitConfirm, () => setShowExitConfirm(false));
 
   const handleBackClick = () => {
     if (showBack) {
@@ -31,31 +34,33 @@ export function Header({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '16px 0',
-          borderBottom: '2px solid var(--border-color)',
-          marginBottom: '24px'
+          padding: '12px 0 16px 0',
+          borderBottom: '1px solid var(--border-color)',
+          marginBottom: '20px'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Left: Brand / Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {showBack && (
             <button
+              type="button"
               onClick={handleBackClick}
               aria-label={backLabel}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--bg-surface-elevated)',
+                gap: '6px',
+                padding: '6px 12px',
+                minHeight: '38px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--bg-surface)',
                 color: 'var(--text-primary)',
-                border: '2px solid var(--border-color)',
-                fontSize: 'var(--font-base)',
-                fontWeight: 'bold',
-                cursor: 'pointer'
+                border: '1px solid var(--border-color)',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '600'
               }}
             >
-              <AccessibleIcon name="arrow-left" size={24} />
+              <AccessibleIcon name="arrow-left" size={18} />
               <span>{backLabel}</span>
             </button>
           )}
@@ -65,118 +70,103 @@ export function Header({
               fontSize: 'var(--font-h2)',
               fontWeight: '700',
               color: 'var(--text-primary)',
-              margin: 0
+              margin: 0,
+              lineHeight: 1.2
             }}
           >
             {title}
           </h1>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Right: Caregiver Portal & Accessibility Settings */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {onOpenCaregiver && (
             <button
+              type="button"
               onClick={onOpenCaregiver}
               aria-label="Caregiver Dashboard Portal"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--bg-surface-elevated)',
+                gap: '6px',
+                padding: '6px 12px',
+                minHeight: '38px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--bg-surface)',
                 color: 'var(--text-primary)',
-                border: '2px solid var(--border-color)',
-                fontSize: 'var(--font-base)',
-                fontWeight: 'bold',
-                cursor: 'pointer'
+                border: '1px solid var(--border-color)',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '600'
               }}
             >
-              <AccessibleIcon name="lock" size={22} />
+              <AccessibleIcon name="lock" size={16} />
               <span>Caregiver</span>
             </button>
           )}
 
           <button
+            type="button"
             onClick={() => setShowSettingsModal(true)}
-            aria-label="Display and Accessibility Settings"
+            aria-label="Display & Accessibility Settings"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--bg-surface-elevated)',
+              gap: '6px',
+              padding: '6px 12px',
+              minHeight: '38px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--bg-surface)',
               color: 'var(--text-primary)',
-              border: '2px solid var(--border-color)',
-              fontSize: 'var(--font-base)',
-              fontWeight: 'bold',
-              cursor: 'pointer'
+              border: '1px solid var(--border-color)',
+              fontSize: 'var(--font-sm)',
+              fontWeight: '600'
             }}
           >
-            <AccessibleIcon name="settings" size={24} />
+            <AccessibleIcon name="settings" size={16} />
             <span>Settings</span>
           </button>
         </div>
       </header>
 
-      {/* Exit Confirmation Dialog */}
+      {/* Confirmation Dialog on Leaving */}
       {showExitConfirm && (
         <div
+          className="modal-overlay"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="exit-modal-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            zIndex: 1000
-          }}
+          aria-labelledby="exit-confirm-title"
         >
           <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '3px solid var(--border-color)',
-              borderRadius: '16px',
-              padding: '32px',
-              maxWidth: '520px',
-              width: '100%',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-            }}
+            ref={confirmModalRef}
+            className="modal-content"
+            style={{ maxWidth: '420px' }}
           >
-            <h2
-              id="exit-modal-title"
+            <h3
+              id="exit-confirm-title"
               style={{
                 fontSize: 'var(--font-h2)',
-                marginBottom: '16px',
-                color: 'var(--text-primary)'
+                fontWeight: '700',
+                color: 'var(--text-primary)',
+                marginBottom: '8px'
               }}
             >
-              Return to Home?
-            </h2>
+              Return to main room?
+            </h3>
             <p
               style={{
                 fontSize: 'var(--font-base)',
-                marginBottom: '28px',
-                color: 'var(--text-secondary)'
+                color: 'var(--text-secondary)',
+                marginBottom: '20px',
+                lineHeight: '1.4'
               }}
             >
-              You can leave this activity at any time. Take all the time you need, or return whenever you feel ready.
+              Would you like to return to the home screen? You can choose another activity at any time.
             </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-              <BigButton
-                variant="secondary"
-                onClick={() => setShowExitConfirm(false)}
-              >
-                Keep Playing
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <BigButton variant="secondary" size="md" onClick={() => setShowExitConfirm(false)}>
+                Stay Here
               </BigButton>
-              <BigButton
-                variant="primary"
-                onClick={confirmExit}
-              >
+              <BigButton variant="primary" size="md" onClick={confirmExit}>
                 Yes, Return Home
               </BigButton>
             </div>
@@ -184,10 +174,11 @@ export function Header({
         </div>
       )}
 
-      {/* Accessibility Preferences Modal */}
-      {showSettingsModal && (
-        <AccessibilityModal onClose={() => setShowSettingsModal(false)} />
-      )}
+      {/* Accessibility & Display Settings Modal */}
+      <AccessibilityModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
     </>
   );
 }

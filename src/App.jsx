@@ -25,45 +25,109 @@ import { BigButton } from './components/common/BigButton.jsx';
 class FriendlyErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null, showDetails: false };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
     console.error('FriendlyErrorBoundary caught an error:', error, errorInfo);
+    this.setState({ errorInfo });
   }
 
   handleReset = () => {
-    this.setState({ hasError: false });
+    this.setState({ hasError: false, error: null, errorInfo: null });
     if (this.props.onReset) this.props.onReset();
   };
 
   render() {
     if (this.state.hasError) {
+      const isDev = import.meta.env.DEV;
       return (
         <div
+          role="alert"
           style={{
-            padding: '40px 20px',
+            padding: '36px 24px',
             textAlign: 'center',
             backgroundColor: 'var(--bg-surface)',
-            borderRadius: '16px',
-            border: '2px solid var(--border-color)',
-            margin: '40px auto',
+            borderRadius: 'var(--radius-xl)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-md)',
+            margin: '32px auto',
             maxWidth: '600px'
           }}
         >
-          <h2 style={{ fontSize: 'var(--font-h1)', marginBottom: '16px', color: 'var(--text-primary)' }}>
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--accent-soft)',
+              color: 'var(--accent-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 18px auto'
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>🌱</span>
+          </div>
+          <h2 style={{ fontSize: 'var(--font-h1)', marginBottom: '12px', color: 'var(--text-primary)', fontWeight: '700' }}>
             All is Well
           </h2>
-          <p style={{ fontSize: 'var(--font-base)', marginBottom: '28px', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: 'var(--font-base)', marginBottom: '24px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
             We encountered a little hiccup, but there is nothing to worry about. Let us return to the main room together.
           </p>
-          <BigButton variant="primary" onClick={this.handleReset}>
-            Return to Home Screen
-          </BigButton>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <BigButton variant="primary" onClick={this.handleReset}>
+              Return to Home Screen
+            </BigButton>
+            <BigButton variant="secondary" onClick={() => window.location.reload()}>
+              Reload Page
+            </BigButton>
+          </div>
+
+          {isDev && this.state.error && (
+            <div style={{ marginTop: '24px', textAlign: 'left' }}>
+              <button
+                type="button"
+                onClick={() => this.setState(s => ({ showDetails: !s.showDetails }))}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--accent-color)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  textDecoration: 'underline',
+                  padding: '4px 0',
+                  cursor: 'pointer'
+                }}
+              >
+                {this.state.showDetails ? 'Hide technical error' : 'Show technical error (development only)'}
+              </button>
+              {this.state.showDetails && (
+                <pre
+                  style={{
+                    marginTop: '8px',
+                    padding: '12px',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: '#1E293B',
+                    color: '#F87171',
+                    fontSize: '12px',
+                    overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all'
+                  }}
+                >
+                  {this.state.error?.toString()}
+                  {'\n'}
+                  {this.state.errorInfo?.componentStack}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -216,9 +280,13 @@ export function App() {
         Skip to main content
       </a>
 
+      {/* Only show header back button on non-game views; active games provide their own GameControlsBar */}
       <Header
         title={getHeaderTitle()}
-        showBack={currentView !== 'home'}
+        showBack={
+          currentView !== 'home' &&
+          !['memory-match', 'picture-sequence', 'number-path', 'dice-match', 'word-match'].includes(currentView)
+        }
         onBack={handleReturnHome}
         onOpenCaregiver={() => setShowCaregiverGate(true)}
         backLabel={
@@ -232,7 +300,7 @@ export function App() {
             ? 'Leave Album'
             : currentView === 'caregiver'
             ? 'Exit Caregiver'
-            : 'Leave Game'
+            : 'Back to Home'
         }
       />
 

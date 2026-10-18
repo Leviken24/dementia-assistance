@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
+import { useFocusTrap } from '../common/useFocusTrap.js';
 import { vaultApiClient } from '../../services/vaultApiClient.js';
 
 export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
@@ -20,6 +21,8 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDraftingAi, setIsDraftingAi] = useState(false);
   const [error, setError] = useState(null);
+
+  const modalRef = useFocusTrap(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -112,37 +115,19 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="upload-modal-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        zIndex: 2100,
-        overflowY: 'auto'
-      }}
+      className="modal-overlay"
     >
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface)',
-          border: '3px solid var(--border-color)',
-          borderRadius: '20px',
-          padding: '32px',
-          maxWidth: '620px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.3)'
-        }}
+        ref={modalRef}
+        className="modal-content"
+        style={{ maxWidth: '580px', maxHeight: '90vh' }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
           <h2
             id="upload-modal-title"
-            style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', margin: 0, fontWeight: 'bold' }}
+            style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', margin: 0, fontWeight: '700' }}
           >
-            Add New Family Memory
+            Add Family Memory
           </h2>
           <button
             onClick={onClose}
@@ -151,10 +136,11 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: 'var(--text-secondary)'
+              color: 'var(--text-secondary)',
+              padding: '4px'
             }}
           >
-            <AccessibleIcon name="close" size={24} />
+            <AccessibleIcon name="close" size={20} />
           </button>
         </div>
 
@@ -162,13 +148,14 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
           <div
             role="alert"
             style={{
-              backgroundColor: '#FEE2E2',
+              backgroundColor: '#FEF2F2',
               color: '#991B1B',
-              padding: '12px 16px',
-              borderRadius: '10px',
-              marginBottom: '20px',
-              fontSize: 'calc(var(--font-base) * 0.95)',
-              fontWeight: 'bold'
+              border: '1px solid #FCA5A5',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '16px',
+              fontSize: 'calc(var(--font-base) * 0.9)',
+              fontWeight: '600'
             }}
           >
             {error}
@@ -177,14 +164,14 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
 
         <form onSubmit={handleSubmit}>
           {/* File input / preview */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <label
               htmlFor="memory-photo-input"
               style={{
                 display: 'block',
-                fontSize: 'var(--font-base)',
-                fontWeight: 'bold',
-                marginBottom: '8px',
+                fontSize: 'calc(var(--font-base) * 0.9)',
+                fontWeight: '600',
+                marginBottom: '6px',
                 color: 'var(--text-primary)'
               }}
             >
@@ -195,39 +182,92 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
-              required
+              required={!file}
               style={{
                 display: 'block',
                 width: '100%',
-                padding: '10px',
-                border: '2px dashed var(--border-color)',
-                borderRadius: '12px',
-                backgroundColor: 'var(--bg-surface-elevated)'
+                padding: '8px',
+                border: '1px dashed var(--border-color)',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-surface-elevated)',
+                fontSize: 'calc(var(--font-base) * 0.85)',
+                color: 'var(--text-primary)'
               }}
             />
 
             {previewUrl && (
-              <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <div
+                style={{
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '10px 14px',
+                  backgroundColor: 'var(--bg-surface-elevated)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-color)'
+                }}
+              >
                 <img
                   src={previewUrl}
                   alt="Preview of upload"
                   style={{
-                    maxHeight: '180px',
-                    maxWidth: '100%',
-                    borderRadius: '12px',
+                    height: '76px',
+                    width: '76px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-color)',
                     objectFit: 'cover'
                   }}
                 />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 'calc(var(--font-base) * 0.85)',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {file?.name}
+                  </div>
+                  <div style={{ fontSize: 'calc(var(--font-base) * 0.75)', color: 'var(--text-secondary)' }}>
+                    {file ? `${(file.size / 1024).toFixed(1)} KB` : ''}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFile(null);
+                    setPreviewUrl(null);
+                    const input = document.getElementById('memory-photo-input');
+                    if (input) input.value = '';
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    minHeight: '36px',
+                    minWidth: 'auto',
+                    backgroundColor: 'var(--danger-soft)',
+                    color: 'var(--danger-color)',
+                    border: '1px solid var(--danger-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: 'calc(var(--font-base) * 0.8)',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             )}
           </div>
 
           {/* Title */}
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '14px' }}>
             <label
               htmlFor="memory-title"
-              style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+              style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.9)', marginBottom: '4px', color: 'var(--text-primary)' }}
             >
               Memory Title / Headline
             </label>
@@ -240,21 +280,22 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
               maxLength={80}
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
-                border: '2px solid var(--border-color)',
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-surface-elevated)',
-                color: 'var(--text-primary)'
+                color: 'var(--text-primary)',
+                fontSize: 'var(--font-base)'
               }}
             />
           </div>
 
           {/* Story / Gentle Prompt */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <div style={{ marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
               <label
                 htmlFor="memory-story"
-                style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}
+                style={{ fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.9)', color: 'var(--text-primary)' }}
               >
                 Gentle Story / Orientation Prompt (Max 300 chars)
               </label>
@@ -265,18 +306,18 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
+                  gap: '4px',
+                  padding: '4px 8px',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--accent-soft)',
                   color: 'var(--accent-color)',
-                  fontSize: 'calc(var(--font-base) * 0.8)',
-                  fontWeight: 'bold',
+                  fontSize: 'calc(var(--font-base) * 0.75)',
+                  fontWeight: '600',
                   cursor: 'pointer'
                 }}
               >
-                <AccessibleIcon name="sparkles" size={14} />
+                <AccessibleIcon name="sparkles" size={12} />
                 <span>{isDraftingAi ? 'Drafting...' : 'Draft with AI'}</span>
               </button>
             </div>
@@ -286,25 +327,27 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
               onChange={e => setStory(e.target.value)}
               placeholder="e.g. You and your sister Rita walking in the tea gardens on a bright morning."
               maxLength={300}
-              rows={3}
+              rows={2}
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
-                border: '2px solid var(--border-color)',
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-surface-elevated)',
                 color: 'var(--text-primary)',
-                fontFamily: 'inherit'
+                fontFamily: 'inherit',
+                fontSize: 'var(--font-base)',
+                resize: 'vertical'
               }}
             />
           </div>
 
           {/* People & Relationship */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
             <div>
               <label
                 htmlFor="memory-person"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Person in Photo
               </label>
@@ -316,18 +359,19 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 placeholder="e.g. Rita"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               />
             </div>
             <div>
               <label
                 htmlFor="memory-relationship"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Relationship to Loved One
               </label>
@@ -339,22 +383,23 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 placeholder="e.g. Sister"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               />
             </div>
           </div>
 
           {/* Approximate Period & Location */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
             <div>
               <label
                 htmlFor="memory-period"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Approximate Period
               </label>
@@ -366,18 +411,19 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 placeholder="e.g. Summer 1985"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               />
             </div>
             <div>
               <label
                 htmlFor="memory-location"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Location
               </label>
@@ -389,22 +435,23 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 placeholder="e.g. Tezpur, Assam"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               />
             </div>
           </div>
 
           {/* Category & Approval Status */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
             <div>
               <label
                 htmlFor="memory-category"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Category
               </label>
@@ -414,11 +461,12 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 onChange={e => setCategory(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               >
                 <option value="family">Family & Loved Ones</option>
@@ -430,7 +478,7 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
             <div>
               <label
                 htmlFor="memory-status"
-                style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+                style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
               >
                 Approval Status
               </label>
@@ -440,11 +488,12 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
                 onChange={e => setApprovalStatus(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '2px solid var(--border-color)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-base)'
                 }}
               >
                 <option value="approved">Approved for Patient View</option>
@@ -455,10 +504,10 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
           </div>
 
           {/* Caregiver Private Notes */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <label
               htmlFor="memory-notes"
-              style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}
+              style={{ display: 'block', fontWeight: '600', fontSize: 'calc(var(--font-base) * 0.85)', marginBottom: '4px', color: 'var(--text-primary)' }}
             >
               Private Caregiver Notes (Not shown to patient)
             </label>
@@ -470,11 +519,12 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
               placeholder="e.g. Brings gentle smiles; loved talking about the garden."
               style={{
                 width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                border: '2px solid var(--border-color)',
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-surface-elevated)',
-                color: 'var(--text-primary)'
+                color: 'var(--text-primary)',
+                fontSize: 'calc(var(--font-base) * 0.95)'
               }}
             />
           </div>
@@ -482,34 +532,34 @@ export function MemoryUploadModal({ isOpen, onClose, onUploaded }) {
           {/* Consent Checkbox */}
           <div
             style={{
-              padding: '14px',
+              padding: '12px',
               backgroundColor: 'var(--accent-soft)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
-              marginBottom: '24px'
+              marginBottom: '20px'
             }}
           >
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={consentAcknowledged}
                 onChange={e => setConsentAcknowledged(e.target.checked)}
-                style={{ width: '20px', height: '20px', marginTop: '2px' }}
+                style={{ width: '18px', height: '18px', marginTop: '2px' }}
                 required
               />
-              <span style={{ fontSize: 'calc(var(--font-base) * 0.9)', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+              <span style={{ fontSize: 'calc(var(--font-base) * 0.85)', color: 'var(--text-primary)', lineHeight: '1.4' }}>
                 I confirm that I have permission from my family and loved one to store and display this photograph for their personal comfort.
               </span>
             </label>
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <BigButton variant="secondary" onClick={onClose} disabled={isLoading}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <BigButton variant="secondary" size="md" onClick={onClose} disabled={isLoading}>
               Cancel
             </BigButton>
-            <BigButton variant="primary" type="submit" disabled={isLoading || !file || !consentAcknowledged}>
-              {isLoading ? 'Saving Memory...' : 'Upload & Save Memory'}
+            <BigButton variant="primary" size="md" type="submit" disabled={isLoading || !file || !consentAcknowledged}>
+              {isLoading ? 'Saving...' : 'Upload & Save'}
             </BigButton>
           </div>
         </form>

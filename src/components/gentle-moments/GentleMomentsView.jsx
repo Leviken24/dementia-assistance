@@ -66,57 +66,57 @@ export function GentleMomentsView({ onExit, onReturnToGame, initialTab = 'calm' 
   return (
     <div
       style={{
-        maxWidth: '720px',
+        maxWidth: '680px',
         margin: '0 auto',
-        padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '32px'
+        gap: '16px'
       }}
     >
       {/* Introduction Header */}
       <div style={{ textAlign: 'center' }}>
         <h2
           style={{
-            fontSize: 'var(--font-h1)',
+            fontSize: 'var(--font-h2)',
             color: 'var(--text-primary)',
-            fontWeight: 'bold',
-            marginBottom: '8px'
+            fontWeight: '700',
+            marginBottom: '4px'
           }}
         >
           A Gentle Moment
         </h2>
         <p
           style={{
-            fontSize: 'var(--font-base)',
+            fontSize: 'var(--font-sm)',
             color: 'var(--text-secondary)',
             margin: '0 auto',
-            maxWidth: '500px',
-            lineHeight: '1.5'
+            maxWidth: '440px',
+            lineHeight: '1.4'
           }}
         >
-          Take a quiet pause to enjoy comforting words or a pleasant glimpse of the world around us.
+          Take a quiet pause to enjoy comforting thoughts or a glimpse of the natural world.
         </p>
       </div>
 
-      {/* Dual-Tab Segmented Selector */}
+      {/* Segmented Selector */}
       <div
         role="tablist"
         aria-label="Gentle Moments categories"
         style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: '12px',
+          gap: '6px',
           backgroundColor: 'var(--bg-surface-elevated)',
-          padding: '8px',
-          borderRadius: '16px',
-          border: '2px solid var(--border-color)',
-          maxWidth: '520px',
+          padding: '4px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-color)',
+          maxWidth: '440px',
           margin: '0 auto',
           width: '100%'
         }}
       >
         <button
+          type="button"
           role="tab"
           aria-selected={activeTab === 'calm'}
           aria-controls="calm-panel"
@@ -124,26 +124,28 @@ export function GentleMomentsView({ onExit, onReturnToGame, initialTab = 'calm' 
           onClick={() => setActiveTab('calm')}
           style={{
             flex: 1,
-            padding: '14px 20px',
-            fontSize: 'var(--font-base)',
-            fontWeight: 'bold',
-            borderRadius: '12px',
-            border: activeTab === 'calm' ? '2px solid var(--accent-color)' : '2px solid transparent',
+            padding: '8px 14px',
+            minHeight: '38px',
+            fontSize: 'var(--font-sm)',
+            fontWeight: '600',
+            borderRadius: 'var(--radius-sm)',
+            border: activeTab === 'calm' ? '1px solid var(--accent-color)' : '1px solid transparent',
             backgroundColor: activeTab === 'calm' ? 'var(--accent-color)' : 'transparent',
-            color: activeTab === 'calm' ? 'var(--button-primary-text, #ffffff)' : 'var(--text-primary)',
+            color: activeTab === 'calm' ? '#FFFFFF' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease, color 0.2s ease',
+            transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
+            gap: '6px'
           }}
         >
-          <AccessibleIcon name="bloom" size={22} />
-          <span>A Moment of Calm</span>
+          <AccessibleIcon name="bloom" size={16} />
+          <span>Moment of Calm</span>
         </button>
 
         <button
+          type="button"
           role="tab"
           aria-selected={activeTab === 'discovery'}
           aria-controls="discovery-panel"
@@ -151,22 +153,23 @@ export function GentleMomentsView({ onExit, onReturnToGame, initialTab = 'calm' 
           onClick={() => setActiveTab('discovery')}
           style={{
             flex: 1,
-            padding: '14px 20px',
-            fontSize: 'var(--font-base)',
-            fontWeight: 'bold',
-            borderRadius: '12px',
-            border: activeTab === 'discovery' ? '2px solid var(--accent-color)' : '2px solid transparent',
+            padding: '8px 14px',
+            minHeight: '38px',
+            fontSize: 'var(--font-sm)',
+            fontWeight: '600',
+            borderRadius: 'var(--radius-sm)',
+            border: activeTab === 'discovery' ? '1px solid var(--accent-color)' : '1px solid transparent',
             backgroundColor: activeTab === 'discovery' ? 'var(--accent-color)' : 'transparent',
-            color: activeTab === 'discovery' ? 'var(--button-primary-text, #ffffff)' : 'var(--text-primary)',
+            color: activeTab === 'discovery' ? '#FFFFFF' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease, color 0.2s ease',
+            transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
+            gap: '6px'
           }}
         >
-          <AccessibleIcon name="flower" size={22} />
+          <AccessibleIcon name="flower" size={16} />
           <span>A Little Discovery</span>
         </button>
       </div>
@@ -186,33 +189,26 @@ export function GentleMomentsView({ onExit, onReturnToGame, initialTab = 'calm' 
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '16px',
-          flexWrap: 'wrap',
-          marginTop: '12px'
-        }}
-      >
+      {/* Return to Activity or Home */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '8px' }}>
         {onReturnToGame && (
           <BigButton
             variant="secondary"
+            size="sm"
             onClick={onReturnToGame}
-            icon={<AccessibleIcon name="arrow-left" size={24} />}
-            ariaLabel="Return to previous activity results"
+            icon={<AccessibleIcon name="arrow-left" size={16} />}
           >
             Back to Game Results
           </BigButton>
         )}
+
         <BigButton
-          variant="secondary"
+          variant="ghost"
+          size="sm"
           onClick={onExit}
-          icon={<AccessibleIcon name="home" size={24} />}
-          ariaLabel="Return to home screen"
+          icon={<AccessibleIcon name="home" size={16} />}
         >
-          Return to Home Screen
+          Return to Home
         </BigButton>
       </div>
     </div>

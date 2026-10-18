@@ -28,26 +28,32 @@ export function DieFace({ value = 1, size = 96, className = '' }) {
         borderRadius: '20px'
       }}
     >
-      {/* Die Body */}
+      {/* Die Body with rich ivory-to-pearl gradient */}
+      <defs>
+        <linearGradient id={`die-grad-${clamped}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#E2E8F0" />
+        </linearGradient>
+      </defs>
       <rect
         x="4"
         y="4"
         width="92"
         height="92"
         rx="20"
-        fill="var(--bg-surface)"
-        stroke="var(--border-color)"
-        strokeWidth="6"
+        fill={`url(#die-grad-${clamped})`}
+        stroke="#94A3B8"
+        strokeWidth="4"
       />
 
-      {/* Dots */}
+      {/* Dots in deep obsidian with subtle bevel */}
       {dots.map(([cx, cy], idx) => (
         <circle
           key={idx}
           cx={cx}
           cy={cy}
-          r="9"
-          fill="var(--accent-color)"
+          r="9.5"
+          fill="#0F172A"
         />
       ))}
     </svg>

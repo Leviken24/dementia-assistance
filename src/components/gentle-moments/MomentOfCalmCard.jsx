@@ -11,30 +11,28 @@ export function MomentOfCalmCard({ message, onNext }) {
 
   return (
     <article
+      className="card-base"
       style={{
-        backgroundColor: 'var(--bg-surface)',
-        borderRadius: '20px',
-        border: '3px solid var(--border-color)',
-        padding: '36px 28px',
-        maxWidth: '640px',
+        padding: '28px 24px',
+        maxWidth: '560px',
         margin: '0 auto',
         textAlign: 'center',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.04)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '24px'
+        gap: '20px'
       }}
       aria-label="A Moment of Calm"
     >
       {/* Peaceful Icon Indicator */}
       <div
         style={{
-          width: '76px',
-          height: '76px',
+          width: '52px',
+          height: '52px',
           borderRadius: '50%',
           backgroundColor: 'var(--accent-soft)',
           color: 'var(--accent-color)',
+          border: '1px solid var(--accent-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -42,19 +40,20 @@ export function MomentOfCalmCard({ message, onNext }) {
         }}
         aria-hidden="true"
       >
-        <AccessibleIcon name="bloom" size={44} />
+        <AccessibleIcon name="bloom" size={28} />
       </div>
 
       {/* Gentle Message Content */}
       <div aria-live="polite" aria-atomic="true" style={{ width: '100%' }}>
         <p
           style={{
-            fontSize: 'var(--font-h2)',
+            fontSize: 'var(--font-h3)',
             color: 'var(--text-primary)',
             lineHeight: '1.6',
-            fontWeight: 'normal',
+            fontWeight: '500',
+            fontStyle: 'italic',
             margin: '0 auto',
-            maxWidth: '520px'
+            maxWidth: '460px'
           }}
         >
           &ldquo;{safeMessage.text}&rdquo;
@@ -62,7 +61,7 @@ export function MomentOfCalmCard({ message, onNext }) {
       </div>
 
       {/* Action to cycle peacefully and read aloud */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '8px' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
           type="button"
           onClick={() => {
@@ -77,30 +76,31 @@ export function MomentOfCalmCard({ message, onNext }) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '12px 20px',
-            borderRadius: '12px',
-            border: '2px solid var(--border-color)',
-            backgroundColor: 'var(--bg-surface-elevated)',
+            padding: '8px 16px',
+            minHeight: '40px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
-            fontSize: 'var(--font-base)',
-            fontWeight: 'bold',
-            cursor: 'pointer'
+            fontSize: 'var(--font-sm)',
+            fontWeight: '600'
           }}
         >
-          <AccessibleIcon name="volume" size={22} />
-          <span>Read Aloud</span>
+          <AccessibleIcon name="volume" size={18} />
+          <span>{voiceService.isSpeaking ? 'Stop' : 'Read Aloud'}</span>
         </button>
 
         <BigButton
           variant="secondary"
+          size="sm"
           onClick={() => {
             voiceService.stop();
             onNext();
           }}
-          icon={<AccessibleIcon name="refresh" size={24} />}
-          ariaLabel="Read another calm thought"
+          icon={<AccessibleIcon name="refresh" size={18} />}
+          ariaLabel="Read another comforting thought"
         >
-          Read Another Thought
+          Another Thought
         </BigButton>
       </div>
     </article>

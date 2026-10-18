@@ -19,49 +19,33 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
 
   return (
     <article
+      className="card-base"
       style={{
-        backgroundColor: 'var(--bg-surface)',
-        borderRadius: '20px',
-        border: '3px solid var(--border-color)',
-        padding: '36px 28px',
-        maxWidth: '640px',
+        padding: '24px 20px',
+        maxWidth: '560px',
         margin: '0 auto',
         textAlign: 'center',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.04)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '20px'
+        gap: '16px'
       }}
       aria-label="A Little Discovery"
     >
       {/* Category Badge & Icon */}
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 18px',
-          borderRadius: '20px',
-          backgroundColor: 'var(--success-soft)',
-          color: 'var(--success-color)',
-          fontSize: 'var(--font-base)',
-          fontWeight: 'bold',
-          textTransform: 'capitalize'
-        }}
-      >
-        <AccessibleIcon name={safeDiscovery.icon || 'flower'} size={20} />
+      <span className="badge badge-success" style={{ textTransform: 'capitalize' }}>
+        <AccessibleIcon name={safeDiscovery.icon || 'flower'} size={14} />
         <span>{safeDiscovery.category || 'Nature'}</span>
-      </div>
+      </span>
 
       {/* Discovery Title & Content */}
       <div aria-live="polite" aria-atomic="true" style={{ width: '100%' }}>
         <h3
           style={{
-            fontSize: 'var(--font-h1)',
+            fontSize: 'var(--font-h2)',
             color: 'var(--text-primary)',
-            fontWeight: 'bold',
-            marginBottom: '16px'
+            fontWeight: '700',
+            marginBottom: '10px'
           }}
         >
           {safeDiscovery.title}
@@ -69,145 +53,120 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
 
         <p
           style={{
-            fontSize: 'var(--font-h3)',
+            fontSize: 'var(--font-base)',
             color: 'var(--text-secondary)',
             lineHeight: '1.6',
             margin: '0 auto',
-            maxWidth: '540px'
+            maxWidth: '460px'
           }}
         >
           {safeDiscovery.text}
         </p>
 
-        {/* Optional AI Explanation (Constrained & Gentle) */}
+        {/* Optional AI Explanation */}
         {aiExplanation && (
           <div
             style={{
-              marginTop: '16px',
-              padding: '14px 18px',
-              borderRadius: '12px',
+              marginTop: '14px',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-md)',
               backgroundColor: 'var(--accent-soft)',
-              border: '1px solid var(--border-color)',
-              fontSize: 'calc(var(--font-base) * 0.95)',
+              border: '1px solid var(--accent-border)',
+              fontSize: 'var(--font-sm)',
               color: 'var(--text-primary)',
-              lineHeight: '1.5'
+              lineHeight: '1.4',
+              textAlign: 'left'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontWeight: 'bold', fontSize: 'calc(var(--font-base) * 0.85)', color: 'var(--accent-color)' }}>
-              <AccessibleIcon name="sparkles" size={16} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: '700', fontSize: 'var(--font-xs)', color: 'var(--accent-color)' }}>
+              <AccessibleIcon name="sparkles" size={14} />
               <span>Gentle Nature Note</span>
             </div>
             {aiExplanation}
           </div>
         )}
-
-        {/* Citation Attribution */}
-        {safeDiscovery.reference ? (
-          <div
-            style={{
-              marginTop: '20px',
-              paddingTop: '16px',
-              borderTop: '1px solid var(--border-color)',
-              fontSize: 'calc(var(--font-base) * 0.9)',
-              color: 'var(--text-secondary)',
-              fontStyle: 'italic'
-            }}
-          >
-            Source: {safeDiscovery.reference}
-          </div>
-        ) : (
-          <div
-            style={{
-              marginTop: '20px',
-              paddingTop: '16px',
-              borderTop: '1px solid var(--border-color)',
-              fontSize: 'calc(var(--font-base) * 0.9)',
-              color: 'var(--text-secondary)',
-              fontStyle: 'italic'
-            }}
-          >
-            Source reference pending editorial review
-          </div>
-        )}
       </div>
 
-      {/* Action Controls: Read Aloud, AI Explanation, Next Fact */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
+      {/* Audio & Navigation Actions */}
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
           type="button"
           onClick={() => {
+            const spokenText = aiExplanation
+              ? `${safeDiscovery.title}. ${safeDiscovery.text}. ${aiExplanation}`
+              : `${safeDiscovery.title}. ${safeDiscovery.text}`;
             if (voiceService.isSpeaking) {
               voiceService.stop();
             } else {
-              const fullSpeech = `${safeDiscovery.title}. ${safeDiscovery.text}. ${aiExplanation || ''}`;
-              voiceService.speak(fullSpeech);
+              voiceService.speak(spokenText);
             }
           }}
           aria-label={voiceService.isSpeaking ? 'Stop speaking fact' : 'Listen to fact read aloud'}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '12px 18px',
-            borderRadius: '12px',
-            border: '2px solid var(--border-color)',
-            backgroundColor: 'var(--bg-surface-elevated)',
+            gap: '6px',
+            padding: '8px 14px',
+            minHeight: '40px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
-            fontSize: 'var(--font-base)',
-            fontWeight: 'bold',
-            cursor: 'pointer'
+            fontSize: 'var(--font-sm)',
+            fontWeight: '600'
           }}
         >
-          <AccessibleIcon name="volume" size={22} />
-          <span>Read Aloud</span>
+          <AccessibleIcon name="volume" size={18} />
+          <span>{voiceService.isSpeaking ? 'Stop' : 'Read Aloud'}</span>
         </button>
 
         {!aiExplanation && (
           <button
             type="button"
+            disabled={isLoadingAi}
             onClick={async () => {
               setIsLoadingAi(true);
               try {
                 const res = await vaultApiClient.explainFact(safeDiscovery.text, safeDiscovery.category);
                 setAiExplanation(res.text);
               } catch (e) {
-                setAiExplanation('Nature in the North Eastern hills is rich with wonderful plants and gentle rivers.');
+                setAiExplanation('Nature in the North Eastern Region is full of gentle wonder and life.');
               } finally {
                 setIsLoadingAi(false);
               }
             }}
-            disabled={isLoadingAi}
-            aria-label="Ask for a gentle explanation about this fact"
+            aria-label="Learn a gentle extra sentence about this fact"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '12px 18px',
-              borderRadius: '12px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: 'var(--bg-surface-elevated)',
+              gap: '6px',
+              padding: '8px 14px',
+              minHeight: '40px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--accent-border)',
+              backgroundColor: 'var(--accent-soft)',
               color: 'var(--accent-color)',
-              fontSize: 'var(--font-base)',
-              fontWeight: 'bold',
-              cursor: 'pointer'
+              fontSize: 'var(--font-sm)',
+              fontWeight: '600'
             }}
           >
-            <AccessibleIcon name="sparkles" size={20} />
-            <span>{isLoadingAi ? 'Thinking...' : 'Learn a Little More'}</span>
+            <AccessibleIcon name="sparkles" size={16} />
+            <span>{isLoadingAi ? 'Thinking...' : 'Learn More'}</span>
           </button>
         )}
 
         <BigButton
           variant="secondary"
+          size="sm"
           onClick={() => {
             voiceService.stop();
             setAiExplanation(null);
             onNext();
           }}
-          icon={<AccessibleIcon name="refresh" size={24} />}
-          ariaLabel="Discover another verified fact"
+          icon={<AccessibleIcon name="refresh" size={18} />}
+          ariaLabel="Discover another interesting fact"
         >
-          Discover Another Fact
+          Another Fact
         </BigButton>
       </div>
     </article>

@@ -7,6 +7,7 @@ import {
 } from './memoryMatchEngine.js';
 import { AccessibleIcon } from '../../components/common/AccessibleIcons.jsx';
 import { BigButton } from '../../components/common/BigButton.jsx';
+import { GameControlsBar } from '../../components/common/GameControlsBar.jsx';
 import { storageService } from '../../services/storageService.js';
 import { voiceService } from '../../services/voiceService.js';
 import { vaultApiClient } from '../../services/vaultApiClient.js';
@@ -17,7 +18,6 @@ export function MemoryMatchView({ onComplete, onExit }) {
   const [pairCount, setPairCount] = useState(initialPairCount);
   const [state, setState] = useState(() => createInitialState(initialPairCount));
   const [statusMessage, setStatusMessage] = useState('Tap any card to turn it over.');
-  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [simplifiedRules, setSimplifiedRules] = useState(null);
   const [isSimplifying, setIsSimplifying] = useState(false);
 
@@ -36,10 +36,8 @@ export function MemoryMatchView({ onComplete, onExit }) {
     }
   };
 
-  // Reference for mismatch delay timer to guarantee safe cleanup on restart or unmount
   const mismatchTimerRef = useRef(null);
 
-  // Clear timer when unmounting
   useEffect(() => {
     return () => {
       if (mismatchTimerRef.current) {
@@ -48,7 +46,6 @@ export function MemoryMatchView({ onComplete, onExit }) {
     };
   }, []);
 
-  // When game completes in engine, signal parent after gentle pause
   useEffect(() => {
     if (state.isComplete) {
       const timer = setTimeout(() => {
@@ -78,7 +75,6 @@ export function MemoryMatchView({ onComplete, onExit }) {
     } else if (actionRequired === 'MISMATCH_PENDING') {
       setStatusMessage('These two are different. They will turn back gently.');
 
-      // Safely schedule mismatch resolution after 1200ms
       if (mismatchTimerRef.current) {
         clearTimeout(mismatchTimerRef.current);
       }
@@ -86,7 +82,7 @@ export function MemoryMatchView({ onComplete, onExit }) {
         setState(current => resolveMismatch(current));
         setStatusMessage('Tap any card to try again.');
         mismatchTimerRef.current = null;
-      }, 1200);
+      }, 1100);
     }
   };
 
@@ -100,98 +96,97 @@ export function MemoryMatchView({ onComplete, onExit }) {
     storageService.setPreferredPairCount(count);
     setState(createInitialState(count));
     setStatusMessage('Fresh cards dealt. Tap any card to begin.');
-    setShowRestartConfirm(false);
   };
 
   const handleHint = () => {
     if (state.isLocked || state.isComplete) return;
     setState(current => triggerHint(current));
-    setStatusMessage('Look at the highlighted cards with the glowing border.');
+    setStatusMessage('Notice the glowing card with the highlighted border.');
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '10px 0' }}>
-      {/* Top Game Bar: Instructions & Difficulty Selector */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '20px',
-          padding: '16px 20px',
-          backgroundColor: 'var(--bg-surface)',
-          borderRadius: '12px',
-          border: '2px solid var(--border-color)'
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 'var(--font-h3)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-            Memory Match
+    <div style={{ maxWidth: '780px', margin: '0 auto' }}>
+      {/* 1. Unified Game Controls Bar */}
+      <GameControlsBar
+        title="Memory Match"
+        status={`Pairs: ${state.pairsMatched} / ${state.totalPairs}`}
+        onRestart={() => handleRestart(pairCount)}
+        onLeave={onExit}
+        isGameActive={!state.isComplete}
+        settingsAction={
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => handleRestart(4)}
+              style={{
+                padding: '6px 10px',
+                minHeight: '34px',
+                borderRadius: 'var(--radius-sm)',
+                border: pairCount === 4 ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                backgroundColor: pairCount === 4 ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                color: pairCount === 4 ? 'var(--accent-color)' : 'var(--text-secondary)',
+                fontSize: 'var(--font-xs)',
+                fontWeight: pairCount === 4 ? '700' : '500'
+              }}
+            >
+              8 Cards
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRestart(6)}
+              style={{
+                padding: '6px 10px',
+                minHeight: '34px',
+                borderRadius: 'var(--radius-sm)',
+                border: pairCount === 6 ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                backgroundColor: pairCount === 6 ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                color: pairCount === 6 ? 'var(--accent-color)' : 'var(--text-secondary)',
+                fontSize: 'var(--font-xs)',
+                fontWeight: pairCount === 6 ? '700' : '500'
+              }}
+            >
+              12 Cards
+            </button>
           </div>
-          <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>
-            Pairs found: <strong>{state.pairsMatched} of {state.totalPairs}</strong>
-          </div>
-        </div>
-
-        {/* Difficulty Selector */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>Cards:</span>
-          <button
-            onClick={() => handleRestart(4)}
-            style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: pairCount === 4 ? '2px solid var(--focus-ring)' : '2px solid var(--border-color)',
-              backgroundColor: pairCount === 4 ? 'var(--accent-soft)' : 'var(--bg-surface-elevated)',
-              color: 'var(--text-primary)',
-              fontWeight: pairCount === 4 ? 'bold' : 'normal',
-              cursor: 'pointer'
-            }}
+        }
+        secondaryAction={
+          <BigButton
+            variant="gentle"
+            size="sm"
+            onClick={handleHint}
+            disabled={state.isLocked || state.isComplete}
+            icon={<AccessibleIcon name="lightbulb" size={16} />}
+            ariaLabel="Need a hint? Highlight a matching pair"
           >
-            8 Cards (Gentle)
-          </button>
-          <button
-            onClick={() => handleRestart(6)}
-            style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: pairCount === 6 ? '2px solid var(--focus-ring)' : '2px solid var(--border-color)',
-              backgroundColor: pairCount === 6 ? 'var(--accent-soft)' : 'var(--bg-surface-elevated)',
-              color: 'var(--text-primary)',
-              fontWeight: pairCount === 6 ? 'bold' : 'normal',
-              cursor: 'pointer'
-            }}
-          >
-            12 Cards (Standard)
-          </button>
-        </div>
-      </div>
+            Hint
+          </BigButton>
+        }
+      />
 
-      {/* Optional AI Simplified Rules Banner */}
+      {/* 2. Optional AI Simplified Rules Box */}
       {simplifiedRules && (
         <div
           role="region"
           aria-label="Simplified instructions"
+          className="card-base"
           style={{
             backgroundColor: 'var(--accent-soft)',
-            border: '2px solid var(--accent-color)',
-            borderRadius: '12px',
-            padding: '14px 20px',
-            marginBottom: '16px',
+            borderColor: 'var(--accent-border)',
+            padding: '10px 16px',
+            marginBottom: '14px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '12px'
+            gap: '10px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <AccessibleIcon name="sparkles" size={20} />
-            <span style={{ fontSize: 'var(--font-base)', color: 'var(--text-primary)', fontWeight: 'bold' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AccessibleIcon name="sparkles" size={18} />
+            <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-primary)', fontWeight: '600' }}>
               {simplifiedRules}
             </span>
           </div>
+
           <button
             type="button"
             onClick={() => {
@@ -201,119 +196,211 @@ export function MemoryMatchView({ onComplete, onExit }) {
                 voiceService.speak(simplifiedRules);
               }
             }}
-            aria-label="Listen to rules read aloud"
             style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
+              padding: '4px 10px',
+              minHeight: '32px',
+              borderRadius: 'var(--radius-sm)',
               backgroundColor: 'var(--bg-surface)',
-              cursor: 'pointer',
-              display: 'inline-flex',
+              border: '1px solid var(--accent-border)',
+              color: 'var(--accent-color)',
+              fontSize: 'var(--font-xs)',
+              fontWeight: '600',
+              display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              fontWeight: 'bold',
-              fontSize: 'calc(var(--font-base) * 0.85)'
+              gap: '4px'
             }}
           >
-            <AccessibleIcon name="volume" size={18} />
+            <AccessibleIcon name="volume" size={14} />
             <span>Read</span>
           </button>
         </div>
       )}
 
-      {/* Gentle Live Status Message */}
+      {/* 3. Live Feedback / Status Message */}
       <div
         role="status"
         aria-live="polite"
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '12px 16px',
+          justifyContent: 'space-between',
+          padding: '8px 14px',
+          marginBottom: '14px',
+          borderRadius: 'var(--radius-md)',
           backgroundColor: 'var(--bg-surface-elevated)',
-          borderRadius: '10px',
-          border: '1px solid var(--border-color)',
-          fontSize: 'var(--font-base)',
-          color: 'var(--text-primary)',
-          fontWeight: '500',
-          marginBottom: '24px'
+          border: '1px solid var(--border-subtle)',
+          fontSize: 'var(--font-sm)',
+          color: 'var(--text-secondary)'
         }}
       >
-        <span>{statusMessage}</span>
+        <span style={{ fontWeight: '500' }}>{statusMessage}</span>
+
         {!simplifiedRules && (
           <button
             type="button"
             onClick={handleSimplifyRules}
             disabled={isSimplifying}
             style={{
-              background: 'none',
+              background: 'transparent',
               border: 'none',
               color: 'var(--accent-color)',
-              fontWeight: 'bold',
-              fontSize: 'calc(var(--font-base) * 0.85)',
+              fontSize: 'var(--font-xs)',
+              fontWeight: '600',
               cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
+              padding: '2px 6px',
+              minHeight: 'auto',
+              minWidth: 'auto',
+              textDecoration: 'underline'
             }}
           >
-            <AccessibleIcon name="sparkles" size={16} />
-            <span>{isSimplifying ? 'Simplifying...' : 'Simpler Rules?'}</span>
+            {isSimplifying ? 'Simplifying...' : 'Simpler Rules?'}
           </button>
         )}
       </div>
 
-      {/* Responsive Card Grid */}
+      {/* 4. Memory Cards Grid */}
       <div
-        role="region"
-        aria-label="Card Grid"
         className="memory-grid"
+        role="region"
+        aria-label="Memory match cards grid"
+        style={{
+          gridTemplateColumns: `repeat(4, minmax(0, 1fr))`,
+          gap: '16px'
+        }}
       >
-        {state.cards.map((card, index) => {
+        {state.cards.map((card, idx) => {
           const isFaceUp = card.isFlipped || card.isMatched;
 
           return (
-            <button
+            <div
               key={card.id}
-              onClick={() => handleCardClick(card.id)}
-              disabled={state.isLocked || card.isMatched}
-              aria-label={`Card ${index + 1}: ${isFaceUp ? card.label : 'Face down'}${card.isMatched ? ', Matched' : ''}`}
               style={{
-                aspectRatio: '3 / 4',
-                minHeight: '110px',
-                borderRadius: '14px',
-                border: card.isHinted
-                  ? '4px solid #FFD700'
-                  : card.isMatched
-                  ? '3px solid var(--success-color)'
-                  : isFaceUp
-                  ? '3px solid var(--accent-color)'
-                  : '3px solid var(--border-color)',
-                backgroundColor: isFaceUp ? 'var(--bg-surface)' : 'var(--card-back-bg)',
-                color: isFaceUp ? 'var(--text-primary)' : 'var(--card-back-text)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px 8px',
-                textAlign: 'center',
-                boxShadow: card.isHinted
-                  ? '0 0 16px rgba(255, 215, 0, 0.6)'
-                  : '0 4px 10px rgba(0,0,0,0.08)',
-                cursor: card.isMatched || state.isLocked ? 'default' : 'pointer',
-                transition: 'transform var(--transition-speed) ease, border-color var(--transition-speed) ease'
+                perspective: '1000px',
+                aspectRatio: '1 / 1.15',
+                width: '100%'
               }}
             >
-              {isFaceUp ? (
-                <>
-                  <div style={{ color: card.isMatched ? 'var(--success-color)' : 'var(--accent-color)', marginBottom: '8px' }}>
-                    <AccessibleIcon name={card.iconType} size={44} />
+              <button
+                type="button"
+                onClick={() => handleCardClick(card.id)}
+                disabled={card.isMatched || state.isLocked}
+                aria-label={
+                  card.isMatched
+                    ? `Card ${idx + 1}: ${card.label}, matched`
+                    : isFaceUp
+                    ? `Card ${idx + 1}: ${card.label}, face up`
+                    : `Card ${idx + 1}: face down`
+                }
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'relative',
+                  transformStyle: 'preserve-3d',
+                  transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: isFaceUp ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: card.isMatched || state.isLocked ? 'default' : 'pointer',
+                  borderRadius: 'var(--radius-lg)'
+                }}
+              >
+                {/* CARD BACK (Face down - shown when rotation is 0deg) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    borderRadius: 'var(--radius-lg)',
+                    border: card.isHinted
+                      ? '3px solid #F59E0B'
+                      : '1px solid var(--glass-border)',
+                    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))',
+                    backdropFilter: 'var(--glass-blur)',
+                    WebkitBackdropFilter: 'var(--glass-blur)',
+                    color: 'var(--accent-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: card.isHinted
+                      ? '0 0 16px rgba(245, 158, 11, 0.6)'
+                      : '0 4px 12px rgba(0, 0, 0, 0.25)',
+                    padding: '10px'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: 'rgba(56, 189, 248, 0.1)',
+                      border: '1px solid rgba(56, 189, 248, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <AccessibleIcon name="flower" size={24} />
                   </div>
                   <span
                     style={{
-                      fontSize: 'var(--font-base)',
-                      fontWeight: 'bold',
-                      lineHeight: '1.2'
+                      fontSize: '11px',
+                      letterSpacing: '1px',
+                      fontWeight: '700',
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Touch
+                  </span>
+                </div>
+
+                {/* CARD FRONT (Face up - rotated 180deg) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: card.isMatched
+                      ? '2px solid var(--success-border)'
+                      : '2px solid var(--accent-border)',
+                    backgroundColor: card.isMatched
+                      ? 'rgba(52, 211, 153, 0.18)'
+                      : 'rgba(30, 41, 59, 0.92)',
+                    backdropFilter: 'var(--glass-blur)',
+                    WebkitBackdropFilter: 'var(--glass-blur)',
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '10px 8px',
+                    boxShadow: card.isMatched
+                      ? '0 0 14px rgba(52, 211, 153, 0.35)'
+                      : '0 4px 14px rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  <div
+                    style={{
+                      color: card.isMatched ? 'var(--success-color)' : 'var(--accent-color)',
+                      marginBottom: '8px'
+                    }}
+                  >
+                    <AccessibleIcon name={card.iconType} size={38} />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 'var(--font-sm)',
+                      fontWeight: '700',
+                      lineHeight: '1.2',
+                      textAlign: 'center',
+                      color: 'var(--text-primary)'
                     }}
                   >
                     {card.label}
@@ -321,100 +408,21 @@ export function MemoryMatchView({ onComplete, onExit }) {
                   {card.isMatched && (
                     <span
                       style={{
-                        fontSize: '12px',
+                        fontSize: '11px',
                         color: 'var(--success-color)',
-                        fontWeight: 'bold',
+                        fontWeight: '700',
                         marginTop: '4px'
                       }}
                     >
                       ✓ Matched
                     </span>
                   )}
-                </>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <AccessibleIcon name="flower" size={28} />
-                  <span style={{ fontSize: '13px', letterSpacing: '1px', opacity: 0.85 }}>GENTLE</span>
                 </div>
-              )}
-            </button>
+              </button>
+            </div>
           );
         })}
       </div>
-
-      {/* Action Controls: Hint, Restart, Exit */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          flexWrap: 'wrap'
-        }}
-      >
-        <BigButton
-          variant="gentle"
-          onClick={handleHint}
-          disabled={state.isLocked || state.isComplete}
-          icon={<AccessibleIcon name="lightbulb" size={24} />}
-          ariaLabel="Need a hint? Highlight a matching pair"
-        >
-          Need a Hint?
-        </BigButton>
-
-        <BigButton
-          variant="secondary"
-          onClick={() => setShowRestartConfirm(true)}
-          icon={<AccessibleIcon name="refresh" size={24} />}
-          ariaLabel="Restart game with fresh cards"
-        >
-          Restart
-        </BigButton>
-      </div>
-
-      {/* Restart Confirmation Dialog */}
-      {showRestartConfirm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="restart-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            zIndex: 1000
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              maxWidth: '480px',
-              width: '100%'
-            }}
-          >
-            <h3 id="restart-title" style={{ fontSize: 'var(--font-h2)', marginBottom: '12px', color: 'var(--text-primary)' }}>
-              Restart this game?
-            </h3>
-            <p style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-              Would you like to deal a fresh set of cards?
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
-              <BigButton variant="secondary" onClick={() => setShowRestartConfirm(false)}>
-                Keep Playing
-              </BigButton>
-              <BigButton variant="primary" onClick={() => handleRestart(pairCount)}>
-                Yes, Deal New Cards
-              </BigButton>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

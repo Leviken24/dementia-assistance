@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
+import { useFocusTrap } from '../common/useFocusTrap.js';
 import { vaultApiClient } from '../../services/vaultApiClient.js';
 import { voiceService } from '../../services/voiceService.js';
 
@@ -11,6 +12,8 @@ export function MemoryVaultView({ onExit }) {
   const [error, setError] = useState(null);
   const [confirmSetAside, setConfirmSetAside] = useState(false);
   const [setAsideSuccess, setSetAsideSuccess] = useState(false);
+
+  const confirmModalRef = useFocusTrap(confirmSetAside, () => setConfirmSetAside(false));
 
   useEffect(() => {
     let isMounted = true;
@@ -97,9 +100,21 @@ export function MemoryVaultView({ onExit }) {
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <h2 style={{ fontSize: 'var(--font-h1)', color: 'var(--text-primary)', marginBottom: '16px' }}>
-          Opening Your Memory Album...
+      <div style={{ textAlign: 'center', padding: '60px 20px', maxWidth: '560px', margin: '0 auto' }}>
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            border: '3px solid var(--border-color)',
+            borderTopColor: 'var(--accent-color)',
+            margin: '0 auto 20px auto',
+            animation: 'spin 1s linear infinite'
+          }}
+          aria-hidden="true"
+        />
+        <h2 style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', marginBottom: '8px' }}>
+          Opening Your Memory Album
         </h2>
         <p style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>
           Bringing your fond family photographs into view.
@@ -112,19 +127,20 @@ export function MemoryVaultView({ onExit }) {
     return (
       <div
         style={{
-          maxWidth: '600px',
-          margin: '40px auto',
-          padding: '32px',
+          maxWidth: '540px',
+          margin: '32px auto',
+          padding: '28px',
           backgroundColor: 'var(--bg-surface)',
-          borderRadius: '16px',
-          border: '2px solid var(--border-color)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-sm)',
           textAlign: 'center'
         }}
       >
-        <h2 style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', marginBottom: '12px' }}>
           Peaceful Memory Album
         </h2>
-        <p style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        <p style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.5' }}>
           {error}
         </p>
         <BigButton variant="primary" onClick={onExit}>
@@ -138,41 +154,41 @@ export function MemoryVaultView({ onExit }) {
     return (
       <div
         style={{
-          maxWidth: '650px',
-          margin: '40px auto',
-          padding: '40px 24px',
+          maxWidth: '540px',
+          margin: '32px auto',
+          padding: '36px 28px',
           backgroundColor: 'var(--bg-surface)',
-          borderRadius: '20px',
-          border: '2px solid var(--border-color)',
-          textAlign: 'center',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-sm)',
+          textAlign: 'center'
         }}
       >
         <div
           style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '20px',
+            width: '60px',
+            height: '60px',
+            borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--accent-soft)',
             color: 'var(--accent-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 24px auto'
+            margin: '0 auto 20px auto'
           }}
           aria-hidden="true"
         >
-          <AccessibleIcon name="heart" size={44} />
+          <AccessibleIcon name="heart" size={32} />
         </div>
-        <h2 style={{ fontSize: 'var(--font-h1)', color: 'var(--text-primary)', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', marginBottom: '12px' }}>
           A Blank Album Waiting for Memories
         </h2>
         <p
           style={{
             fontSize: 'var(--font-base)',
             color: 'var(--text-secondary)',
-            marginBottom: '32px',
-            lineHeight: '1.6'
+            marginBottom: '24px',
+            lineHeight: '1.5'
           }}
         >
           Your family album does not have any pictures added yet. A caregiver can easily add cherished
@@ -189,19 +205,44 @@ export function MemoryVaultView({ onExit }) {
   const imageUrl = vaultApiClient.getPatientMemoryImageUrl(current.id);
 
   return (
-    <div style={{ maxWidth: '850px', margin: '0 auto', padding: '16px 0' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '8px 0 24px 0' }}>
+      {/* Top Header & Return Action */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+          paddingBottom: '12px',
+          borderBottom: '1px solid var(--border-color)'
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: 'var(--font-h2)', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
+            Personal Memory Album
+          </h1>
+          <p style={{ margin: 0, fontSize: 'calc(var(--font-base) * 0.9)', color: 'var(--text-secondary)' }}>
+            Gentle photographs and cherished family stories
+          </p>
+        </div>
+        <BigButton variant="secondary" size="sm" onClick={onExit}>
+          Return to Room
+        </BigButton>
+      </div>
+
       {setAsideSuccess && (
         <div
           role="status"
           style={{
             backgroundColor: '#ECFDF5',
             color: '#065F46',
-            padding: '16px 20px',
-            borderRadius: '12px',
-            marginBottom: '20px',
+            padding: '12px 16px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid #A7F3D0',
+            marginBottom: '16px',
             textAlign: 'center',
             fontSize: 'var(--font-base)',
-            fontWeight: 'bold'
+            fontWeight: '600'
           }}
         >
           This picture has been gently set aside. You will not see it again.
@@ -212,19 +253,19 @@ export function MemoryVaultView({ onExit }) {
       <article
         style={{
           backgroundColor: 'var(--bg-surface)',
-          border: '2px solid var(--border-color)',
-          borderRadius: '24px',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-          marginBottom: '24px'
+          boxShadow: 'var(--shadow-md)',
+          marginBottom: '16px'
         }}
       >
         {/* Memory Photograph Container */}
         <div
           style={{
-            backgroundColor: '#000',
+            backgroundColor: '#0F172A',
             textAlign: 'center',
-            maxHeight: '480px',
+            maxHeight: '440px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -236,7 +277,7 @@ export function MemoryVaultView({ onExit }) {
             alt={current.title ? `Family photograph: ${current.title}` : 'Family photograph'}
             style={{
               maxWidth: '100%',
-              maxHeight: '480px',
+              maxHeight: '440px',
               objectFit: 'contain',
               display: 'block',
               margin: '0 auto'
@@ -245,15 +286,15 @@ export function MemoryVaultView({ onExit }) {
         </div>
 
         {/* Narrative & Context Details */}
-        <div style={{ padding: '32px' }}>
+        <div style={{ padding: '24px' }}>
           {current.title && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
               <h2
                 style={{
-                  fontSize: 'var(--font-h1)',
+                  fontSize: 'var(--font-h2)',
                   color: 'var(--text-primary)',
                   margin: 0,
-                  fontWeight: 'bold'
+                  fontWeight: '700'
                 }}
               >
                 {current.title}
@@ -274,12 +315,12 @@ export function MemoryVaultView({ onExit }) {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '8px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-surface-elevated)',
                   color: 'var(--text-primary)',
-                  fontWeight: 'bold',
-                  fontSize: 'calc(var(--font-base) * 0.85)',
+                  fontWeight: '600',
+                  fontSize: 'calc(var(--font-base) * 0.9)',
                   cursor: 'pointer'
                 }}
               >
@@ -292,10 +333,10 @@ export function MemoryVaultView({ onExit }) {
           {current.story && (
             <p
               style={{
-                fontSize: 'calc(var(--font-base) * 1.1)',
+                fontSize: 'calc(var(--font-base) * 1.05)',
                 color: 'var(--text-primary)',
                 lineHeight: '1.6',
-                marginBottom: '20px'
+                marginBottom: '16px'
               }}
             >
               {current.story}
@@ -308,8 +349,8 @@ export function MemoryVaultView({ onExit }) {
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: '10px',
-                marginBottom: '20px'
+                gap: '8px',
+                marginBottom: '16px'
               }}
             >
               {current.people.map((person, idx) => (
@@ -318,16 +359,16 @@ export function MemoryVaultView({ onExit }) {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: 'var(--accent-soft)',
                     color: 'var(--accent-color)',
-                    fontSize: 'var(--font-base)',
-                    fontWeight: 'bold'
+                    fontSize: 'calc(var(--font-base) * 0.9)',
+                    fontWeight: '600'
                   }}
                 >
-                  <AccessibleIcon name="user" size={20} />
+                  <AccessibleIcon name="user" size={16} />
                   <span>
                     {person.name}
                     {person.relationship ? ` (${person.relationship})` : ''}
@@ -344,19 +385,19 @@ export function MemoryVaultView({ onExit }) {
                 display: 'flex',
                 gap: '16px',
                 flexWrap: 'wrap',
-                fontSize: 'var(--font-base)',
+                fontSize: 'calc(var(--font-base) * 0.9)',
                 color: 'var(--text-secondary)'
               }}
             >
               {current.approximatePeriod && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <AccessibleIcon name="clock" size={20} />
+                  <AccessibleIcon name="clock" size={18} />
                   {current.approximatePeriod}
                 </span>
               )}
               {current.location && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <AccessibleIcon name="mountain" size={20} />
+                  <AccessibleIcon name="mountain" size={18} />
                   {current.location}
                 </span>
               )}
@@ -372,10 +413,10 @@ export function MemoryVaultView({ onExit }) {
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '16px'
+          gap: '12px'
         }}
       >
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <BigButton
             variant="secondary"
             onClick={handlePrevious}
@@ -397,10 +438,9 @@ export function MemoryVaultView({ onExit }) {
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <span
             style={{
-              fontSize: 'var(--font-base)',
+              fontSize: 'calc(var(--font-base) * 0.9)',
               color: 'var(--text-secondary)',
-              fontWeight: 'bold',
-              marginRight: '8px'
+              fontWeight: '600'
             }}
           >
             Photo {currentIndex + 1} of {memories.length}
@@ -412,19 +452,19 @@ export function MemoryVaultView({ onExit }) {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '12px 18px',
-              borderRadius: '12px',
-              border: '2px solid var(--border-color)',
+              gap: '6px',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
               backgroundColor: 'var(--bg-surface-elevated)',
               color: 'var(--text-secondary)',
-              fontSize: 'calc(var(--font-base) * 0.95)',
-              fontWeight: 'bold',
+              fontSize: 'calc(var(--font-base) * 0.9)',
+              fontWeight: '600',
               cursor: 'pointer'
             }}
           >
-            <AccessibleIcon name="eye-off" size={22} />
-            <span>Set Picture Aside</span>
+            <AccessibleIcon name="eye-off" size={18} />
+            <span>Set Aside</span>
           </button>
         </div>
       </div>
@@ -435,34 +475,19 @@ export function MemoryVaultView({ onExit }) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="set-aside-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            zIndex: 1500
-          }}
+          className="modal-overlay"
         >
           <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '3px solid var(--border-color)',
-              borderRadius: '20px',
-              padding: '32px',
-              maxWidth: '500px',
-              width: '100%',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-            }}
+            ref={confirmModalRef}
+            className="modal-content"
+            style={{ maxWidth: '480px' }}
           >
             <h2
               id="set-aside-title"
               style={{
                 fontSize: 'var(--font-h2)',
                 color: 'var(--text-primary)',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}
             >
               Set This Picture Aside?
@@ -472,13 +497,13 @@ export function MemoryVaultView({ onExit }) {
                 fontSize: 'var(--font-base)',
                 color: 'var(--text-secondary)',
                 lineHeight: '1.5',
-                marginBottom: '28px'
+                marginBottom: '24px'
               }}
             >
               If this photograph brings uncomfortable thoughts or sadness, we can gently set it aside.
               It will not appear in your album again.
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <BigButton variant="secondary" onClick={() => setConfirmSetAside(false)}>
                 Keep in Album
               </BigButton>

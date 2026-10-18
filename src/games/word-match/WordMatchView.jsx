@@ -8,13 +8,12 @@ import {
 } from './wordMatchEngine.js';
 import { AccessibleIcon } from '../../components/common/AccessibleIcons.jsx';
 import { BigButton } from '../../components/common/BigButton.jsx';
+import { GameControlsBar } from '../../components/common/GameControlsBar.jsx';
 
 export function WordMatchView({ onComplete, onExit }) {
   const [state, setState] = useState(() => createInitialWordState());
-  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const nextQuestionTimerRef = useRef(null);
 
-  // Clear timer when unmounting
   useEffect(() => {
     return () => {
       if (nextQuestionTimerRef.current) {
@@ -23,7 +22,6 @@ export function WordMatchView({ onComplete, onExit }) {
     };
   }, []);
 
-  // When game completes, signal parent after gentle pause
   useEffect(() => {
     if (state.isComplete) {
       const timer = setTimeout(() => {
@@ -45,7 +43,6 @@ export function WordMatchView({ onComplete, onExit }) {
     const nextState = submitWordAnswer(state, word);
     setState(nextState);
 
-    // If correct and not complete, schedule gentle advance to next question after 900ms
     if (nextState.currentQuestion && nextState.currentQuestion.isSolved && !nextState.isComplete) {
       if (nextQuestionTimerRef.current) {
         clearTimeout(nextQuestionTimerRef.current);
@@ -63,7 +60,6 @@ export function WordMatchView({ onComplete, onExit }) {
       nextQuestionTimerRef.current = null;
     }
     setState(createInitialWordState());
-    setShowRestartConfirm(false);
   };
 
   const handleHint = () => {
@@ -83,212 +79,167 @@ export function WordMatchView({ onComplete, onExit }) {
   const currentQ = state.currentQuestion;
 
   return (
-    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '10px 0' }}>
-      {/* Top Banner: Progress */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '20px',
-          padding: '16px 20px',
-          backgroundColor: 'var(--bg-surface)',
-          borderRadius: '12px',
-          border: '2px solid var(--border-color)'
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 'var(--font-h3)', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-            Word & Picture Match
+    <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+      {/* 1. Unified Game Controls Bar */}
+      <GameControlsBar
+        title="Word Match"
+        status={`Question ${state.currentIndex + 1} / ${state.totalQuestions}`}
+        onRestart={handleRestart}
+        onLeave={onExit}
+        isGameActive={!state.isComplete}
+        secondaryAction={
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <BigButton
+              variant="gentle"
+              size="sm"
+              onClick={handleHint}
+              disabled={state.isComplete || currentQ?.isSolved}
+              icon={<AccessibleIcon name="lightbulb" size={16} />}
+              ariaLabel="Need a hint for word match?"
+            >
+              Hint
+            </BigButton>
+            <BigButton
+              variant="secondary"
+              size="sm"
+              onClick={handleSkip}
+              disabled={state.isComplete}
+              ariaLabel="Skip to next word"
+            >
+              Skip
+            </BigButton>
           </div>
-          <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>
-            Picture <strong>{state.currentIndex + 1} of {state.totalQuestions}</strong>
-          </div>
-        </div>
+        }
+      />
 
-        <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>
-          Correct: <strong>{state.correctCount}</strong>
-        </div>
-      </div>
-
-      {/* Live Feedback / Instruction Message */}
+      {/* 2. Feedback Message */}
       <div
         role="status"
         aria-live="polite"
+        className="card-base"
         style={{
+          padding: '12px 18px',
+          marginBottom: '16px',
           textAlign: 'center',
-          padding: '14px 18px',
-          backgroundColor: currentQ && currentQ.isSolved ? 'var(--success-soft)' : 'var(--bg-surface-elevated)',
-          borderRadius: '10px',
-          border: '1px solid var(--border-color)',
-          fontSize: 'var(--font-base)',
-          color: currentQ && currentQ.isSolved ? 'var(--success-color)' : 'var(--text-primary)',
-          fontWeight: 'bold',
-          marginBottom: '28px',
-          lineHeight: '1.4'
+          fontSize: 'var(--font-sm)',
+          fontWeight: '600',
+          color: currentQ?.isSolved ? 'var(--success-color)' : 'var(--text-secondary)'
         }}
       >
         {state.feedbackMessage}
       </div>
 
-      {/* Center Display: Picture Card */}
+      {/* 3. Center Target Picture Card */}
       {currentQ && (
         <div
+          className="card-base"
           style={{
+            padding: '24px',
+            marginBottom: '20px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '36px 20px',
-            backgroundColor: 'var(--bg-surface)',
-            borderRadius: '20px',
-            border: '3px solid var(--border-color)',
-            marginBottom: '32px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+            gap: '10px'
           }}
         >
-          <div style={{ color: 'var(--accent-color)', marginBottom: '12px' }}>
-            <AccessibleIcon name={currentQ.iconType} size={72} />
-          </div>
-          <span style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>
-            What is this lovely picture?
+          <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', fontWeight: '700' }}>
+            LOOK AT THIS FAMILIAR PICTURE:
           </span>
+
+          <div
+            style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--accent-soft)',
+              color: 'var(--accent-color)',
+              border: '1px solid var(--accent-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <AccessibleIcon name={currentQ.iconType} size={48} />
+          </div>
+
+          <p
+            style={{
+              fontSize: 'var(--font-sm)',
+              color: 'var(--text-secondary)',
+              margin: '4px 0 0 0',
+              textAlign: 'center'
+            }}
+          >
+            {currentQ.promptDescription}
+          </p>
         </div>
       )}
 
-      {/* Word Option Cards (3 Large Buttons) */}
+      {/* 4. Word Choices Grid */}
       {currentQ && (
-        <section aria-label="Word Choices" style={{ marginBottom: '32px' }}>
+        <div>
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '8px', textAlign: 'center' }}>
+            CHOOSE THE MATCHING WORD:
+          </div>
+
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px'
             }}
           >
-            {currentQ.options.map(word => {
-              const isSelected = currentQ.selectedWord === word;
-              const isCorrect = word.toLowerCase() === currentQ.correctWord.toLowerCase();
+            {currentQ.options.map((opt, idx) => {
+              const isSelected = currentQ.isSolved && opt.word === currentQ.targetWord;
 
               return (
                 <button
-                  key={word}
-                  onClick={() => handleSelectWord(word)}
-                  disabled={currentQ.isSolved || state.isComplete}
-                  aria-label={`Option: ${word}`}
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectWord(opt.word)}
+                  disabled={currentQ.isSolved}
+                  aria-label={`Choice: ${opt.word}`}
                   style={{
-                    minHeight: '70px',
-                    borderRadius: '16px',
-                    border: isSelected && isCorrect
-                      ? '4px solid var(--success-color)'
-                      : '3px solid var(--border-color)',
-                    backgroundColor: isSelected && isCorrect
+                    minHeight: '64px',
+                    padding: '12px 16px',
+                    borderRadius: 'var(--radius-md)',
+                    border: opt.isHinted
+                      ? '2px solid #F59E0B'
+                      : isSelected
+                      ? '2px solid var(--success-border)'
+                      : '1px solid var(--border-color)',
+                    backgroundColor: isSelected
                       ? 'var(--success-soft)'
+                      : opt.isHinted
+                      ? 'var(--accent-soft)'
                       : 'var(--bg-surface)',
-                    color: isSelected && isCorrect
-                      ? 'var(--success-color)'
-                      : 'var(--text-primary)',
-                    fontSize: 'var(--font-h3)',
-                    fontWeight: 'bold',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '12px 16px',
-                    textAlign: 'center',
+                    gap: '8px',
+                    boxShadow: opt.isHinted ? '0 0 10px rgba(245, 158, 11, 0.4)' : 'var(--shadow-sm)',
                     cursor: currentQ.isSolved ? 'default' : 'pointer',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.06)',
-                    transition: 'background-color 0.15s ease, border-color 0.15s ease'
+                    transition: 'all var(--transition-speed) ease'
                   }}
                 >
-                  {word}
+                  <span
+                    style={{
+                      fontSize: 'var(--font-base)',
+                      fontWeight: '700',
+                      color: isSelected ? 'var(--success-color)' : 'var(--text-primary)'
+                    }}
+                  >
+                    {opt.word}
+                  </span>
+                  {isSelected && (
+                    <span style={{ fontSize: '11px', color: 'var(--success-color)', fontWeight: '700' }}>
+                      ✓ Match
+                    </span>
+                  )}
                 </button>
               );
             })}
-          </div>
-        </section>
-      )}
-
-      {/* Action Controls: Hint, Skip, Restart */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          flexWrap: 'wrap'
-        }}
-      >
-        <BigButton
-          variant="gentle"
-          onClick={handleHint}
-          disabled={!currentQ || currentQ.isSolved || state.isComplete}
-          icon={<AccessibleIcon name="lightbulb" size={24} />}
-          ariaLabel="Need a hint? Read a gentle clue"
-        >
-          Need a Hint?
-        </BigButton>
-
-        <BigButton
-          variant="outline"
-          onClick={handleSkip}
-          disabled={state.isComplete}
-          ariaLabel="Skip to next picture without penalty"
-        >
-          Skip Picture
-        </BigButton>
-
-        <BigButton
-          variant="secondary"
-          onClick={() => setShowRestartConfirm(true)}
-          icon={<AccessibleIcon name="refresh" size={24} />}
-          ariaLabel="Restart word match puzzle"
-        >
-          Restart
-        </BigButton>
-      </div>
-
-      {/* Restart Confirmation Dialog */}
-      {showRestartConfirm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="restart-word-title"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            zIndex: 1000
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              maxWidth: '480px',
-              width: '100%'
-            }}
-          >
-            <h3 id="restart-word-title" style={{ fontSize: 'var(--font-h2)', marginBottom: '12px', color: 'var(--text-primary)' }}>
-              Restart word puzzle?
-            </h3>
-            <p style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-              Would you like to start fresh from Picture 1?
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
-              <BigButton variant="secondary" onClick={() => setShowRestartConfirm(false)}>
-                Keep Playing
-              </BigButton>
-              <BigButton variant="primary" onClick={handleRestart}>
-                Yes, Start Fresh
-              </BigButton>
-            </div>
           </div>
         </div>
       )}

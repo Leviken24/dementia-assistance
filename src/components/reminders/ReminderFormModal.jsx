@@ -6,17 +6,42 @@ import {
   validateReminder,
   getCategoryMeta
 } from '../../services/reminderService.js';
+import { useFocusTrap } from '../common/useFocusTrap.js';
 
-export function ReminderFormModal({ reminder, onSave, onCancel }) {
-  const isEditing = Boolean(reminder && reminder.id);
+export function ReminderFormModal({
+  isOpen = true,
+  onClose,
+  reminder,
+  initialData,
+  onSave,
+  onCancel
+}) {
+  const activeReminder = initialData || reminder;
+  const isEditing = Boolean(activeReminder && activeReminder.id);
+  const handleClose = onClose || onCancel;
 
-  const [title, setTitle] = useState(reminder?.title || '');
-  const [category, setCategory] = useState(reminder?.category || 'water');
-  const [time, setTime] = useState(reminder?.time || '10:00');
-  const [recurrence, setRecurrence] = useState(reminder?.recurrence || 'daily');
+  const [title, setTitle] = useState(activeReminder?.title || '');
+  const [category, setCategory] = useState(activeReminder?.category || 'water');
+  const [time, setTime] = useState(activeReminder?.time || '10:00');
+  const [recurrence, setRecurrence] = useState(activeReminder?.recurrence || 'daily');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // If user switches category and title is empty or was a default title from another category, suggest new default title
+  const modalRef = useFocusTrap(isOpen, handleClose);
+
+  useEffect(() => {
+    if (activeReminder) {
+      setTitle(activeReminder.title || '');
+      setCategory(activeReminder.category || 'water');
+      setTime(activeReminder.time || '10:00');
+      setRecurrence(activeReminder.recurrence || 'daily');
+    } else {
+      setTitle(getCategoryMeta('water').defaultTitle);
+      setCategory('water');
+      setTime('10:00');
+      setRecurrence('daily');
+    }
+  }, [activeReminder, isOpen]);
+
   const handleCategorySelect = newCatId => {
     setCategory(newCatId);
     const prevCatMeta = getCategoryMeta(category);
@@ -27,25 +52,19 @@ export function ReminderFormModal({ reminder, onSave, onCancel }) {
     }
   };
 
-  useEffect(() => {
-    if (!title && !isEditing) {
-      setTitle(getCategoryMeta('water').defaultTitle);
-    }
-  }, [isEditing, title]);
-
   const handleSubmit = e => {
     e.preventDefault();
     setErrorMessage('');
 
     const payload = {
-      id: reminder?.id,
+      id: activeReminder?.id,
       title,
       time,
       category,
       recurrence,
-      days: reminder?.days || ['daily'],
-      enabled: reminder?.enabled !== undefined ? reminder.enabled : true,
-      createdAt: reminder?.createdAt
+      days: activeReminder?.days || ['daily'],
+      enabled: activeReminder?.enabled !== undefined ? activeReminder.enabled : true,
+      createdAt: activeReminder?.createdAt
     };
 
     const validation = validateReminder(payload);
@@ -57,73 +76,57 @@ export function ReminderFormModal({ reminder, onSave, onCancel }) {
     onSave(validation.sanitized);
   };
 
-  const selectedCategoryMeta = getCategoryMeta(category);
+  if (!isOpen) return null;
 
   return (
     <div
+      className="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reminder-form-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '16px'
-      }}
     >
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface)',
-          borderRadius: '20px',
-          border: '3px solid var(--border-color)',
-          maxWidth: '560px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '32px 24px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
-        }}
+        ref={modalRef}
+        className="modal-content"
+        style={{ maxWidth: '480px', maxHeight: '88vh', overflowY: 'auto' }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '20px'
+            marginBottom: '16px'
           }}
         >
           <h2
             id="reminder-form-title"
             style={{
-              fontSize: 'var(--font-h1)',
+              fontSize: 'var(--font-h3)',
+              fontWeight: '700',
               color: 'var(--text-primary)',
-              margin: 0,
-              fontWeight: 'bold'
+              margin: 0
             }}
           >
-            {isEditing ? 'Edit Daily Reminder' : 'Add a Daily Reminder'}
+            {isEditing ? 'Edit Daily Reminder' : 'Add a Reminder'}
           </h2>
 
           <button
-            onClick={onCancel}
-            aria-label="Close reminder dialog"
+            type="button"
+            onClick={handleClose}
+            aria-label="Close reminder modal"
             style={{
               background: 'transparent',
               border: 'none',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              padding: '8px',
-              borderRadius: '8px',
+              padding: '4px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              minHeight: '36px',
+              minWidth: '36px'
             }}
           >
-            <AccessibleIcon name="close" size={24} />
+            <AccessibleIcon name="close" size={20} />
           </button>
         </div>
 
@@ -131,41 +134,35 @@ export function ReminderFormModal({ reminder, onSave, onCancel }) {
           <div
             role="alert"
             style={{
-              backgroundColor: '#FEE2E2',
-              color: '#991B1B',
-              padding: '12px 16px',
-              borderRadius: '10px',
-              border: '2px solid #EF4444',
-              marginBottom: '20px',
-              fontSize: 'var(--font-base)',
-              fontWeight: 'bold'
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--danger-soft)',
+              color: 'var(--danger-color)',
+              border: '1px solid var(--danger-border)',
+              fontSize: 'var(--font-xs)',
+              fontWeight: '600',
+              marginBottom: '14px'
             }}
           >
             {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          {/* Step 1: Category Picker */}
-          <div style={{ marginBottom: '24px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* Category Picker */}
+          <div>
             <label
               style={{
                 display: 'block',
-                fontSize: 'var(--font-h3)',
-                fontWeight: 'bold',
-                color: 'var(--text-primary)',
-                marginBottom: '10px'
+                fontSize: 'var(--font-xs)',
+                fontWeight: '700',
+                color: 'var(--text-secondary)',
+                marginBottom: '6px'
               }}
             >
-              Choose a Category
+              Category:
             </label>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '10px'
-              }}
-            >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
               {REMINDER_CATEGORIES.map(cat => {
                 const isSelected = category === cat.id;
                 return (
@@ -173,196 +170,152 @@ export function ReminderFormModal({ reminder, onSave, onCancel }) {
                     key={cat.id}
                     type="button"
                     onClick={() => handleCategorySelect(cat.id)}
-                    aria-pressed={isSelected}
                     style={{
+                      padding: '8px 6px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: isSelected ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                      backgroundColor: isSelected ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                      color: isSelected ? 'var(--accent-color)' : 'var(--text-secondary)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '12px 8px',
-                      borderRadius: '12px',
-                      border: isSelected
-                        ? '3px solid var(--accent-color)'
-                        : '2px solid var(--border-color)',
-                      backgroundColor: isSelected
-                        ? 'var(--accent-soft)'
-                        : 'var(--bg-surface-elevated, #fff)',
-                      color: isSelected ? 'var(--accent-color)' : 'var(--text-primary)',
-                      cursor: 'pointer',
-                      fontWeight: isSelected ? 'bold' : 'normal',
-                      fontSize: 'calc(var(--font-base) * 0.9)',
-                      textAlign: 'center'
+                      gap: '4px',
+                      fontSize: 'var(--font-xs)',
+                      fontWeight: isSelected ? '700' : '500',
+                      minHeight: '52px'
                     }}
                   >
-                    <AccessibleIcon name={cat.icon} size={28} />
+                    <AccessibleIcon name={cat.icon} size={18} />
                     <span>{cat.label}</span>
                   </button>
                 );
               })}
             </div>
-
-            {category === 'medication' && (
-              <div
-                style={{
-                  marginTop: '12px',
-                  padding: '10px 14px',
-                  backgroundColor: '#EFF6FF',
-                  border: '1px solid #93C5FD',
-                  borderRadius: '10px',
-                  fontSize: 'calc(var(--font-base) * 0.85)',
-                  color: '#1E40AF',
-                  lineHeight: '1.4'
-                }}
-              >
-                <strong>Caregiver / Personal Schedule Notice:</strong>{' '}
-                {selectedCategoryMeta.disclaimer}
-              </div>
-            )}
           </div>
 
-          {/* Step 2: Reminder Title / Description */}
-          <div style={{ marginBottom: '24px' }}>
+          {/* Title Input */}
+          <div>
             <label
               htmlFor="reminder-title-input"
               style={{
                 display: 'block',
-                fontSize: 'var(--font-h3)',
-                fontWeight: 'bold',
-                color: 'var(--text-primary)',
-                marginBottom: '8px'
+                fontSize: 'var(--font-xs)',
+                fontWeight: '700',
+                color: 'var(--text-secondary)',
+                marginBottom: '4px'
               }}
             >
-              Reminder Note
+              Reminder Note:
             </label>
             <input
               id="reminder-title-input"
               type="text"
               value={title}
-              maxLength={80}
               onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Drink a glass of fresh water"
+              maxLength={80}
+              placeholder="e.g. A Refreshing Glass of Water"
               style={{
                 width: '100%',
-                padding: '12px 16px',
-                fontSize: 'var(--font-base)',
-                borderRadius: '10px',
-                border: '2px solid var(--border-color)',
-                backgroundColor: 'var(--bg-surface-elevated, #fff)',
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-surface)',
                 color: 'var(--text-primary)',
-                boxSizing: 'border-box'
+                fontSize: 'var(--font-sm)',
+                fontFamily: 'inherit'
               }}
             />
+          </div>
+
+          {/* Time Picker & Recurrence Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label
+                htmlFor="reminder-time-input"
+                style={{
+                  display: 'block',
+                  fontSize: 'var(--font-xs)',
+                  fontWeight: '700',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '4px'
+                }}
+              >
+                Time:
+              </label>
+              <input
+                id="reminder-time-input"
+                type="time"
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-sm)',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="reminder-recurrence-input"
+                style={{
+                  display: 'block',
+                  fontSize: 'var(--font-xs)',
+                  fontWeight: '700',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '4px'
+                }}
+              >
+                Frequency:
+              </label>
+              <select
+                id="reminder-recurrence-input"
+                value={recurrence}
+                onChange={e => setRecurrence(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-sm)',
+                  fontFamily: 'inherit'
+                }}
+              >
+                <option value="daily">Repeats Daily</option>
+                <option value="once">Today Only</option>
+              </select>
+            </div>
+          </div>
+
+          {category === 'medication' && (
             <div
               style={{
-                fontSize: 'calc(var(--font-base) * 0.8)',
-                color: 'var(--text-secondary)',
-                marginTop: '4px'
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-subtle)',
+                fontSize: '11px',
+                color: 'var(--text-muted)',
+                lineHeight: '1.4'
               }}
             >
-              Keep the note brief, clear, and reassuring. (Up to 80 letters)
+              Note: Medication reminders are simple schedule prompts. They do not calculate dosages or provide medical guidance.
             </div>
-          </div>
+          )}
 
-          {/* Step 3: Time Picker */}
-          <div style={{ marginBottom: '32px' }}>
-            <label
-              htmlFor="reminder-time-input"
-              style={{
-                display: 'block',
-                fontSize: 'var(--font-h3)',
-                fontWeight: 'bold',
-                color: 'var(--text-primary)',
-                marginBottom: '8px'
-              }}
-            >
-              Time of Day
-            </label>
-            <input
-              id="reminder-time-input"
-              type="time"
-              value={time}
-              onChange={e => setTime(e.target.value)}
-              required
-              style={{
-                padding: '12px 18px',
-                fontSize: 'var(--font-h3)',
-                fontWeight: 'bold',
-                borderRadius: '10px',
-                border: '2px solid var(--border-color)',
-                backgroundColor: 'var(--bg-surface-elevated, #fff)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer'
-              }}
-            />
-          </div>
-
-          {/* Step 4: Recurrence Option */}
-          <div style={{ marginBottom: '32px' }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: 'var(--font-h3)',
-                fontWeight: 'bold',
-                color: 'var(--text-primary)',
-                marginBottom: '10px'
-              }}
-            >
-              How Often?
-            </label>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => setRecurrence('daily')}
-                aria-pressed={recurrence === 'daily'}
-                style={{
-                  padding: '10px 18px',
-                  borderRadius: '10px',
-                  border: recurrence === 'daily'
-                    ? '3px solid var(--accent-color)'
-                    : '2px solid var(--border-color)',
-                  backgroundColor: recurrence === 'daily'
-                    ? 'var(--accent-soft)'
-                    : 'var(--bg-surface-elevated, #fff)',
-                  color: recurrence === 'daily' ? 'var(--accent-color)' : 'var(--text-primary)',
-                  fontWeight: 'bold',
-                  fontSize: 'var(--font-base)',
-                  cursor: 'pointer'
-                }}
-              >
-                Every Day (Daily)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRecurrence('once')}
-                aria-pressed={recurrence === 'once'}
-                style={{
-                  padding: '10px 18px',
-                  borderRadius: '10px',
-                  border: recurrence === 'once'
-                    ? '3px solid var(--accent-color)'
-                    : '2px solid var(--border-color)',
-                  backgroundColor: recurrence === 'once'
-                    ? 'var(--accent-soft)'
-                    : 'var(--bg-surface-elevated, #fff)',
-                  color: recurrence === 'once' ? 'var(--accent-color)' : 'var(--text-primary)',
-                  fontWeight: 'bold',
-                  fontSize: 'var(--font-base)',
-                  cursor: 'pointer'
-                }}
-              >
-                Today Only (One Time)
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <BigButton variant="secondary" onClick={onCancel} type="button">
+          {/* Form Actions */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
+            <BigButton variant="secondary" size="sm" onClick={handleClose}>
               Cancel
             </BigButton>
-            <BigButton variant="primary" type="submit">
+            <BigButton variant="primary" size="sm" type="submit">
               {isEditing ? 'Save Changes' : 'Create Reminder'}
             </BigButton>
           </div>

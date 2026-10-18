@@ -44,8 +44,8 @@ function formatDuration(seconds) {
   const secs = Math.max(0, Number(seconds) || 0);
   const mins = Math.floor(secs / 60);
   const remSecs = secs % 60;
-  if (mins === 0) return `${remSecs} seconds`;
-  if (remSecs === 0) return `${mins} minute${mins > 1 ? 's' : ''}`;
+  if (mins === 0) return `${remSecs}s`;
+  if (remSecs === 0) return `${mins}m`;
   return `${mins}m ${remSecs}s`;
 }
 
@@ -59,28 +59,26 @@ export function ActivityHistoryCard({ record, onPlayAgain }) {
 
   return (
     <article
+      className="card-base"
       style={{
-        backgroundColor: 'var(--bg-surface)',
-        borderRadius: '16px',
-        border: '2px solid var(--border-color)',
-        padding: '24px',
+        padding: '12px 18px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '20px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+        gap: '12px'
       }}
       aria-label={`${meta.title} ${record.completed ? 'completed' : 'played'} on ${formatTimestamp(record.timestamp)}`}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: '240px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div
           style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '12px',
+            width: '40px',
+            height: '40px',
+            borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--accent-soft)',
             color: 'var(--accent-color)',
+            border: '1px solid var(--accent-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -88,113 +86,63 @@ export function ActivityHistoryCard({ record, onPlayAgain }) {
           }}
           aria-hidden="true"
         >
-          <AccessibleIcon name={meta.icon} size={32} />
+          <AccessibleIcon name={meta.icon} size={22} />
         </div>
 
         <div>
-          <h3
-            style={{
-              fontSize: 'var(--font-h3)',
-              color: 'var(--text-primary)',
-              fontWeight: 'bold',
-              margin: '0 0 6px 0'
-            }}
-          >
-            {meta.title}
-          </h3>
-          <div
-            style={{
-              fontSize: 'var(--font-base)',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            {formatTimestamp(record.timestamp)}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '24px',
-          flexWrap: 'wrap'
-        }}
-      >
-        <div style={{ textAlign: 'right' }}>
-          <div
-            style={{
-              fontSize: 'calc(var(--font-base) * 0.9)',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            Status
-          </div>
-          <div
-            style={{
-              fontSize: 'var(--font-base)',
-              fontWeight: 'bold',
-              color: record.completed ? 'var(--success-color)' : 'var(--text-secondary)'
-            }}
-          >
-            {record.completed ? 'Completed' : 'Explored'}
-          </div>
-        </div>
-
-        <div style={{ textAlign: 'right' }}>
-          <div
-            style={{
-              fontSize: 'calc(var(--font-base) * 0.9)',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            Time Spent
-          </div>
-          <div
-            style={{
-              fontSize: 'var(--font-base)',
-              fontWeight: 'bold',
-              color: 'var(--text-primary)'
-            }}
-          >
-            {formatDuration(record.durationSeconds)}
-          </div>
-        </div>
-
-        {record.turnsTaken > 0 && (
-          <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                fontSize: 'calc(var(--font-base) * 0.9)',
-                color: 'var(--text-secondary)'
-              }}
-            >
-              Turns
-            </div>
-            <div
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3
               style={{
                 fontSize: 'var(--font-base)',
-                fontWeight: 'bold',
-                color: 'var(--text-primary)'
+                color: 'var(--text-primary)',
+                fontWeight: '700',
+                margin: 0
               }}
             >
-              {record.turnsTaken}
-            </div>
-          </div>
-        )}
+              {meta.title}
+            </h3>
 
-        {onPlayAgain && (
-          <BigButton
-            variant="secondary"
-            onClick={() => onPlayAgain(record.gameId)}
-            icon={<AccessibleIcon name="refresh" size={20} />}
-            ariaLabel={`Play ${meta.title} again`}
-            style={{ minHeight: '48px', padding: '10px 18px' }}
-          >
-            Play Again
-          </BigButton>
-        )}
+            {record.completed && (
+              <span className="badge badge-success">Completed</span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+            <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>
+              {formatTimestamp(record.timestamp)}
+            </span>
+
+            {record.durationSeconds > 0 && (
+              <>
+                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>•</span>
+                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                  {formatDuration(record.durationSeconds)}
+                </span>
+              </>
+            )}
+
+            {record.turnsTaken > 0 && (
+              <>
+                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)' }}>•</span>
+                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>
+                  {record.turnsTaken} turns
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+      {onPlayAgain && (
+        <BigButton
+          variant="secondary"
+          size="sm"
+          onClick={() => onPlayAgain(record.gameId)}
+          ariaLabel={`Play ${meta.title} again`}
+        >
+          Play Again
+        </BigButton>
+      )}
     </article>
   );
 }

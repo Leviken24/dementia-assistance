@@ -2,6 +2,7 @@ import React from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
 import { formatTimeDisplay, getCategoryMeta } from '../../services/reminderService.js';
+import { useFocusTrap } from '../common/useFocusTrap.js';
 
 /**
  * ReminderNotificationModal
@@ -9,6 +10,10 @@ import { formatTimeDisplay, getCategoryMeta } from '../../services/reminderServi
  * User can acknowledge ("I Saw This"), snooze ("Remind in 10 Min"), or dismiss.
  */
 export function ReminderNotificationModal({ reminder, onAcknowledge, onSnooze, onDismiss }) {
+  const modalRef = useFocusTrap(Boolean(reminder), () => {
+    if (onDismiss && reminder) onDismiss(reminder.id);
+  });
+
   if (!reminder) return null;
 
   const categoryMeta = getCategoryMeta(reminder.category);
@@ -16,70 +21,51 @@ export function ReminderNotificationModal({ reminder, onAcknowledge, onSnooze, o
 
   return (
     <div
+      className="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="due-reminder-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.55)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2000,
-        padding: '20px'
-      }}
+      style={{ zIndex: 2000 }}
     >
       <div
+        ref={modalRef}
+        className="modal-content"
         style={{
-          backgroundColor: 'var(--bg-surface)',
-          borderRadius: '24px',
-          border: '3px solid var(--accent-color)',
-          maxWidth: '520px',
-          width: '100%',
-          padding: '36px 28px',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-          textAlign: 'center'
+          maxWidth: '460px',
+          textAlign: 'center',
+          padding: '24px 20px'
         }}
       >
         {/* Category Icon */}
         <div
           style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '20px',
+            width: '52px',
+            height: '52px',
+            borderRadius: '50%',
             backgroundColor: 'var(--accent-soft)',
             color: 'var(--accent-color)',
+            border: '1px solid var(--accent-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 20px auto'
+            margin: '0 auto 14px auto'
           }}
           aria-hidden="true"
         >
-          <AccessibleIcon name={categoryMeta.icon || 'bell'} size={44} />
+          <AccessibleIcon name={categoryMeta.icon || 'bell'} size={28} />
         </div>
 
-        <div
-          style={{
-            fontSize: 'calc(var(--font-base) * 0.9)',
-            color: 'var(--accent-color)',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            marginBottom: '8px'
-          }}
-        >
-          Daily Reminder ({timeFormatted})
+        <div className="badge badge-accent" style={{ marginBottom: '8px' }}>
+          Daily Reminder • {timeFormatted}
         </div>
 
         <h2
           id="due-reminder-title"
           style={{
-            fontSize: 'var(--font-h1)',
+            fontSize: 'var(--font-h2)',
             color: 'var(--text-primary)',
-            margin: '0 0 12px 0',
-            fontWeight: 'bold',
+            margin: '0 0 8px 0',
+            fontWeight: '700',
             lineHeight: '1.3'
           }}
         >
@@ -88,10 +74,10 @@ export function ReminderNotificationModal({ reminder, onAcknowledge, onSnooze, o
 
         <p
           style={{
-            fontSize: 'var(--font-h3)',
+            fontSize: 'var(--font-sm)',
             color: 'var(--text-secondary)',
-            margin: '0 0 24px 0',
-            lineHeight: '1.5'
+            margin: '0 0 16px 0',
+            lineHeight: '1.4'
           }}
         >
           {categoryMeta.description}
@@ -100,54 +86,48 @@ export function ReminderNotificationModal({ reminder, onAcknowledge, onSnooze, o
         {reminder.category === 'medication' && (
           <div
             style={{
-              padding: '12px',
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #93C5FD',
-              borderRadius: '12px',
-              fontSize: 'calc(var(--font-base) * 0.85)',
-              color: '#1E40AF',
-              marginBottom: '24px',
-              lineHeight: '1.4'
+              padding: '8px 12px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-subtle)',
+              fontSize: 'var(--font-xs)',
+              color: 'var(--text-muted)',
+              marginBottom: '16px',
+              fontStyle: 'italic'
             }}
           >
-            <strong>Note:</strong> {categoryMeta.disclaimer}
+            Personal schedule note. This does not confirm prescription adherence or provide medical advice.
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            marginTop: '16px'
-          }}
-        >
+        {/* Action Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <BigButton
             variant="primary"
+            size="md"
             onClick={() => onAcknowledge(reminder.id)}
-            icon={<AccessibleIcon name="check" size={24} />}
-            ariaLabel="I have seen this reminder"
+            icon={<AccessibleIcon name="check" size={18} />}
+            style={{ width: '100%', justifyContent: 'center' }}
           >
             I Saw This Note
           </BigButton>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <BigButton
               variant="secondary"
+              size="sm"
               onClick={() => onSnooze(reminder.id, 10)}
-              icon={<AccessibleIcon name="clock" size={20} />}
-              ariaLabel="Remind me again in 10 minutes"
-              style={{ flex: 1, minWidth: '160px' }}
+              icon={<AccessibleIcon name="clock" size={16} />}
+              style={{ justifyContent: 'center' }}
             >
               Remind in 10 Min
             </BigButton>
 
             <BigButton
-              variant="secondary"
+              variant="ghost"
+              size="sm"
               onClick={() => onDismiss(reminder.id)}
-              ariaLabel="Dismiss reminder"
-              style={{ flex: 1, minWidth: '140px' }}
+              style={{ justifyContent: 'center' }}
             >
               Dismiss
             </BigButton>

@@ -23,44 +23,42 @@ export function CompletionScreen({
 
   return (
     <div
+      className="card-base"
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
+        padding: '28px 20px',
         textAlign: 'center',
-        backgroundColor: 'var(--bg-surface)',
-        borderRadius: '20px',
-        border: '3px solid var(--border-color)',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
-        maxWidth: '680px',
+        maxWidth: '560px',
         margin: '20px auto'
       }}
     >
+      {/* Icon Badge */}
       <div
         style={{
-          width: '84px',
-          height: '84px',
+          width: '56px',
+          height: '56px',
           borderRadius: '50%',
           backgroundColor: 'var(--success-soft)',
           color: 'var(--success-color)',
+          border: '1px solid var(--success-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '24px'
+          marginBottom: '16px'
         }}
         aria-hidden="true"
       >
-        <AccessibleIcon name="star" size={48} />
+        <AccessibleIcon name="star" size={32} />
       </div>
 
       <h2
         style={{
-          fontSize: 'var(--font-h1)',
+          fontSize: 'var(--font-h2)',
           color: 'var(--text-primary)',
-          marginBottom: '16px',
-          fontWeight: 'bold'
+          marginBottom: '8px',
+          fontWeight: '700'
         }}
       >
         {title}
@@ -68,109 +66,122 @@ export function CompletionScreen({
 
       <p
         style={{
-          fontSize: 'var(--font-h3)',
+          fontSize: 'var(--font-base)',
           color: 'var(--text-secondary)',
-          maxWidth: '500px',
-          lineHeight: '1.5',
-          marginBottom: pacingMessage ? '16px' : '32px'
+          maxWidth: '440px',
+          lineHeight: '1.4',
+          marginBottom: pacingMessage ? '12px' : '20px'
         }}
       >
         {message}
       </p>
 
+      {/* Gentle Pacing / Rest Recommendation */}
       {pacingMessage && (
         <div
           style={{
             backgroundColor: 'var(--accent-soft)',
-            borderRadius: '12px',
-            border: '2px solid var(--accent-color)',
-            padding: '14px 20px',
-            maxWidth: '520px',
-            marginBottom: '28px',
-            fontSize: 'var(--font-base)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--accent-border)',
+            padding: '10px 16px',
+            maxWidth: '460px',
+            marginBottom: '18px',
+            fontSize: 'var(--font-sm)',
             color: 'var(--text-primary)',
-            lineHeight: '1.5'
+            lineHeight: '1.4'
           }}
         >
           {pacingMessage}
         </div>
       )}
 
-      {/* Activity Details Box (Non-clinical) */}
+      {/* Non-clinical Activity Details Box */}
       <div
         style={{
           display: 'flex',
           gap: '24px',
           justifyContent: 'center',
-          flexWrap: 'wrap',
+          padding: '12px 20px',
+          borderRadius: 'var(--radius-md)',
           backgroundColor: 'var(--bg-surface-elevated)',
-          padding: '20px 32px',
-          borderRadius: '12px',
-          border: '1px solid var(--border-color)',
-          marginBottom: '36px'
+          border: '1px solid var(--border-subtle)',
+          marginBottom: '24px',
+          width: '100%',
+          maxWidth: '400px'
         }}
       >
-        {durationSeconds > 0 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>Time Spent</div>
-            <div style={{ fontSize: 'var(--font-h2)', fontWeight: 'bold', color: 'var(--accent-color)' }}>
-              {formatTime(durationSeconds)}
-            </div>
+        <div>
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', fontWeight: '600' }}>
+            TIME SPENT
           </div>
-        )}
+          <div style={{ fontSize: 'var(--font-base)', fontWeight: '700', color: 'var(--text-primary)' }}>
+            {formatTime(durationSeconds)}
+          </div>
+        </div>
 
         {turnsTaken > 0 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>Turns Enjoyed</div>
-            <div style={{ fontSize: 'var(--font-h2)', fontWeight: 'bold', color: 'var(--accent-color)' }}>
+          <div>
+            <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', fontWeight: '600' }}>
+              TURNS ENJOYED
+            </div>
+            <div style={{ fontSize: 'var(--font-base)', fontWeight: '700', color: 'var(--text-primary)' }}>
               {turnsTaken}
             </div>
           </div>
         )}
 
         {pairsMatched > 0 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--font-base)', color: 'var(--text-secondary)' }}>Pairs Matched</div>
-            <div style={{ fontSize: 'var(--font-h2)', fontWeight: 'bold', color: 'var(--success-color)' }}>
+          <div>
+            <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', fontWeight: '600' }}>
+              PAIRS FOUND
+            </div>
+            <div style={{ fontSize: 'var(--font-base)', fontWeight: '700', color: 'var(--text-primary)' }}>
               {pairsMatched}
             </div>
           </div>
         )}
       </div>
 
-      {/* Respectful Action Choices */}
+      {/* Primary & Secondary Action Buttons */}
       <div
         style={{
           display: 'flex',
-          gap: '20px',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          width: '100%'
+          flexDirection: 'column',
+          gap: '10px',
+          width: '100%',
+          maxWidth: '360px'
         }}
       >
         <BigButton
           variant="primary"
+          size="md"
           onClick={onPlayAgain}
-          icon={<AccessibleIcon name="refresh" size={24} />}
+          icon={<AccessibleIcon name="refresh" size={18} />}
+          style={{ width: '100%', justifyContent: 'center' }}
         >
           Play Again
         </BigButton>
+
         {onGentleMoment && (
           <BigButton
             variant="secondary"
+            size="md"
             onClick={onGentleMoment}
-            icon={<AccessibleIcon name="bloom" size={24} />}
-            ariaLabel="Take a peaceful pause with A Gentle Moment"
+            icon={<AccessibleIcon name="bloom" size={18} />}
+            style={{ width: '100%', justifyContent: 'center' }}
           >
-            A Gentle Moment
+            Enjoy a Gentle Moment
           </BigButton>
         )}
+
         <BigButton
-          variant="secondary"
+          variant="ghost"
+          size="sm"
           onClick={onReturnHome}
-          icon={<AccessibleIcon name="home" size={24} />}
+          icon={<AccessibleIcon name="home" size={18} />}
+          style={{ width: '100%', justifyContent: 'center' }}
         >
-          Return Home
+          Return to Home
         </BigButton>
       </div>
     </div>

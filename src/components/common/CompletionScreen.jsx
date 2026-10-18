@@ -10,7 +10,8 @@ export function CompletionScreen({
   pairsMatched = 0,
   onPlayAgain,
   onReturnHome,
-  onGentleMoment
+  onGentleMoment,
+  pacingMessage
 }) {
   const formatTime = seconds => {
     const mins = Math.floor(seconds / 60);
@@ -71,11 +72,29 @@ export function CompletionScreen({
           color: 'var(--text-secondary)',
           maxWidth: '500px',
           lineHeight: '1.5',
-          marginBottom: '32px'
+          marginBottom: pacingMessage ? '16px' : '32px'
         }}
       >
         {message}
       </p>
+
+      {pacingMessage && (
+        <div
+          style={{
+            backgroundColor: 'var(--accent-soft)',
+            borderRadius: '12px',
+            border: '2px solid var(--accent-color)',
+            padding: '14px 20px',
+            maxWidth: '520px',
+            marginBottom: '28px',
+            fontSize: 'var(--font-base)',
+            color: 'var(--text-primary)',
+            lineHeight: '1.5'
+          }}
+        >
+          {pacingMessage}
+        </div>
+      )}
 
       {/* Activity Details Box (Non-clinical) */}
       <div

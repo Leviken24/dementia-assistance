@@ -1,9 +1,12 @@
 import React from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
+import { FALLBACK_CALM_MESSAGE } from '../../games/gentle-moments/gentleMomentsEngine.js';
 
 export function MomentOfCalmCard({ message, onNext }) {
-  if (!message) return null;
+  const safeMessage = message && typeof message.text === 'string' && message.text.trim().length > 0
+    ? message
+    : FALLBACK_CALM_MESSAGE;
 
   return (
     <article
@@ -53,7 +56,7 @@ export function MomentOfCalmCard({ message, onNext }) {
             maxWidth: '520px'
           }}
         >
-          &ldquo;{message.text}&rdquo;
+          &ldquo;{safeMessage.text}&rdquo;
         </p>
       </div>
 

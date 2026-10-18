@@ -7,28 +7,60 @@ import {
   getCalmMessages,
   getLittleDiscoveries,
   getNextCalmMessage,
-  getNextLittleDiscovery
+  getNextLittleDiscovery,
+  FALLBACK_CALM_MESSAGE,
+  FALLBACK_LITTLE_DISCOVERY
 } from '../../games/gentle-moments/gentleMomentsEngine.js';
+import { storageService } from '../../services/storageService.js';
+import { getNextRotatedContent } from '../../services/personalizationEngine.js';
 
-export function GentleMomentsView({ onExit, initialTab = 'calm' }) {
+export function GentleMomentsView({ onExit, onReturnToGame, initialTab = 'calm' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const calmList = getCalmMessages();
   const discoveryList = getLittleDiscoveries();
+  const prefs = storageService.getUserPreferences();
+  const { nextCalmId, nextDiscoveryId } = getNextRotatedContent(
+    prefs.contentState,
+    calmList,
+    discoveryList
+  );
 
-  const [currentCalm, setCurrentCalm] = useState(calmList[0]);
-  const [currentDiscovery, setCurrentDiscovery] = useState(discoveryList[0]);
+  const [currentCalm, setCurrentCalm] = useState(
+    () => (nextCalmId ? calmList.find(c => c.id === nextCalmId) : calmList[0]) || FALLBACK_CALM_MESSAGE
+  );
+  const [currentDiscovery, setCurrentDiscovery] = useState(
+    () => (nextDiscoveryId ? discoveryList.find(d => d.id === nextDiscoveryId) : discoveryList[0]) || FALLBACK_LITTLE_DISCOVERY
+  );
 
   const handleNextCalm = () => {
-    if (currentCalm) {
-      setCurrentCalm(getNextCalmMessage(currentCalm.id));
-    }
+    setCurrentCalm(prev => {
+      const next = getNextCalmMessage(prev ? prev.id : null);
+      if (next && next.id) {
+        storageService.saveUserPreferences({
+          contentState: {
+            ...storageService.getUserPreferences().contentState,
+            lastCalmId: next.id
+          }
+        });
+      }
+      return next;
+    });
   };
 
   const handleNextDiscovery = () => {
-    if (currentDiscovery) {
-      setCurrentDiscovery(getNextLittleDiscovery(currentDiscovery.id));
-    }
+    setCurrentDiscovery(prev => {
+      const next = getNextLittleDiscovery(prev ? prev.id : null);
+      if (next && next.id) {
+        storageService.saveUserPreferences({
+          contentState: {
+            ...storageService.getUserPreferences().contentState,
+            lastDiscoveryId: next.id
+          }
+        });
+      }
+      return next;
+    });
   };
 
   return (
@@ -154,8 +186,26 @@ export function GentleMomentsView({ onExit, initialTab = 'calm' }) {
         )}
       </div>
 
-      {/* Prominent Return Home Button */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
+      {/* Action Buttons */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '16px',
+          flexWrap: 'wrap',
+          marginTop: '12px'
+        }}
+      >
+        {onReturnToGame && (
+          <BigButton
+            variant="secondary"
+            onClick={onReturnToGame}
+            icon={<AccessibleIcon name="arrow-left" size={24} />}
+            ariaLabel="Return to previous activity results"
+          >
+            Back to Game Results
+          </BigButton>
+        )}
         <BigButton
           variant="secondary"
           onClick={onExit}

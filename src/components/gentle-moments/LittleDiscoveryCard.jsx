@@ -1,9 +1,16 @@
 import React from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
+import { FALLBACK_LITTLE_DISCOVERY } from '../../games/gentle-moments/gentleMomentsEngine.js';
 
 export function LittleDiscoveryCard({ discovery, onNext }) {
-  if (!discovery) return null;
+  const safeDiscovery =
+    discovery &&
+    typeof discovery.title === 'string' &&
+    typeof discovery.text === 'string' &&
+    discovery.text.trim().length > 0
+      ? discovery
+      : FALLBACK_LITTLE_DISCOVERY;
 
   return (
     <article
@@ -38,8 +45,8 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
           textTransform: 'capitalize'
         }}
       >
-        <AccessibleIcon name={discovery.icon || 'flower'} size={20} />
-        <span>{discovery.category}</span>
+        <AccessibleIcon name={safeDiscovery.icon || 'flower'} size={20} />
+        <span>{safeDiscovery.category || 'Nature'}</span>
       </div>
 
       {/* Discovery Title & Content */}
@@ -52,7 +59,7 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
             marginBottom: '16px'
           }}
         >
-          {discovery.title}
+          {safeDiscovery.title}
         </h3>
 
         <p
@@ -64,11 +71,11 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
             maxWidth: '540px'
           }}
         >
-          {discovery.text}
+          {safeDiscovery.text}
         </p>
 
         {/* Citation Attribution */}
-        {discovery.reference && (
+        {safeDiscovery.reference ? (
           <div
             style={{
               marginTop: '20px',
@@ -79,7 +86,20 @@ export function LittleDiscoveryCard({ discovery, onNext }) {
               fontStyle: 'italic'
             }}
           >
-            Source: {discovery.reference}
+            Source: {safeDiscovery.reference}
+          </div>
+        ) : (
+          <div
+            style={{
+              marginTop: '20px',
+              paddingTop: '16px',
+              borderTop: '1px solid var(--border-color)',
+              fontSize: 'calc(var(--font-base) * 0.9)',
+              color: 'var(--text-secondary)',
+              fontStyle: 'italic'
+            }}
+          >
+            Source reference pending editorial review
           </div>
         )}
       </div>

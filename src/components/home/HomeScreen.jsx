@@ -1,10 +1,82 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AccessibleIcon } from '../common/AccessibleIcons.jsx';
 import { BigButton } from '../common/BigButton.jsx';
+import { GentleOrientationBanner } from '../orientation/GentleOrientationBanner.jsx';
+import { storageService } from '../../services/storageService.js';
+import {
+  sortActivitiesByFavorites,
+  getRecentActivityShortcut
+} from '../../services/personalizationEngine.js';
+
+const ACTIVITIES = [
+  {
+    id: 'memory-match',
+    title: 'Memory Match',
+    description: 'Turn over cards to find matching pairs of familiar nature pictures, flowers, and everyday teacups.',
+    icon: 'flower',
+    buttonLabel: 'Play Memory Match'
+  },
+  {
+    id: 'picture-sequence',
+    title: 'Picture Stories',
+    description: 'Arrange lovely pictures in order to tell simple, peaceful stories from daily life.',
+    icon: 'leaf',
+    buttonLabel: 'Play Picture Stories'
+  },
+  {
+    id: 'number-path',
+    title: 'Garden Path',
+    description: 'Take a gentle, relaxing walk along the garden stepping stones to reach the pavilion.',
+    icon: 'mountain',
+    buttonLabel: 'Walk the Garden Path'
+  },
+  {
+    id: 'dice-match',
+    title: 'Dice Pattern Match',
+    description: 'Roll the wooden die and match the dot pattern with friendly, clear choices.',
+    icon: 'star',
+    buttonLabel: 'Play Dice Match'
+  },
+  {
+    id: 'word-match',
+    title: 'Word & Picture Match',
+    description: 'Look at peaceful nature pictures and choose the matching word from three simple, clear choices.',
+    icon: 'cup',
+    buttonLabel: 'Play Word Match'
+  },
+  {
+    id: 'gentle-moments',
+    title: 'A Gentle Moment',
+    description: 'Take a peaceful pause with a comforting thought or discover a fascinating little fact about nature and the world.',
+    icon: 'bloom',
+    buttonLabel: 'Enjoy a Gentle Moment'
+  }
+];
 
 export function HomeScreen({ onSelectGame }) {
+  const [preferences, setPreferences] = useState(() => storageService.getUserPreferences());
+  const history = storageService.getGameHistory();
+  const recentShortcut = getRecentActivityShortcut(history);
+
+  const handleToggleFavorite = (gameId) => {
+    const updated = storageService.toggleFavoriteGame(gameId);
+    setPreferences(updated);
+  };
+
+  const sortedActivities = sortActivitiesByFavorites(
+    ACTIVITIES,
+    preferences.favoriteGameIds
+  );
+
+  const recentMeta = recentShortcut
+    ? ACTIVITIES.find(a => a.id === recentShortcut.gameId) || { title: recentShortcut.gameId }
+    : null;
+
   return (
     <div style={{ padding: '20px 0' }}>
+      {/* Gentle Temporal Orientation Banner & Upcoming Reminder */}
+      <GentleOrientationBanner onManageReminders={() => onSelectGame('reminders')} />
+
       {/* Welcoming Greeting */}
       <section
         style={{
@@ -13,7 +85,7 @@ export function HomeScreen({ onSelectGame }) {
           backgroundColor: 'var(--bg-surface)',
           borderRadius: '20px',
           border: '2px solid var(--border-color)',
-          marginBottom: '36px',
+          marginBottom: '28px',
           boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
         }}
       >
@@ -38,7 +110,96 @@ export function HomeScreen({ onSelectGame }) {
         >
           Take a calm, pleasant moment to play a peaceful game. There are no timers and no rush—simply enjoy at your own pace.
         </p>
+
+        {/* Home Navigation Hub: Reminders & Activity Journal */}
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <BigButton
+            variant="primary"
+            onClick={() => onSelectGame('reminders')}
+            icon={<AccessibleIcon name="bell" size={22} />}
+            ariaLabel="Open your daily reminders"
+          >
+            My Daily Reminders
+          </BigButton>
+
+          <BigButton
+            variant="secondary"
+            onClick={() => onSelectGame('history')}
+            icon={<AccessibleIcon name="star" size={22} />}
+            ariaLabel="Open your activity journal"
+          >
+            My Activity Journal
+          </BigButton>
+        </div>
       </section>
+
+      {/* Pick Up Where You Left Off Quick Launcher */}
+      {recentShortcut && recentMeta && (
+        <section
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderRadius: '16px',
+            border: '2px solid var(--accent-color)',
+            padding: '20px 28px',
+            marginBottom: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+          }}
+          aria-label="Recently played activity shortcut"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--accent-soft)',
+                color: 'var(--accent-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              aria-hidden="true"
+            >
+              <AccessibleIcon name={recentMeta.icon || 'star'} size={28} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 'calc(var(--font-base) * 0.85)',
+                  fontWeight: 'bold',
+                  color: 'var(--accent-color)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                Pick Up Where You Left Off
+              </div>
+              <div
+                style={{
+                  fontSize: 'var(--font-h3)',
+                  color: 'var(--text-primary)',
+                  fontWeight: 'bold'
+                }}
+              >
+                {recentMeta.title}
+              </div>
+            </div>
+          </div>
+
+          <BigButton
+            variant="primary"
+            onClick={() => onSelectGame(recentShortcut.gameId)}
+            ariaLabel={`Resume ${recentMeta.title}`}
+          >
+            Resume Activity
+          </BigButton>
+        </section>
+      )}
 
       {/* Main Activities Section */}
       <section aria-labelledby="activities-heading">
@@ -62,383 +223,111 @@ export function HomeScreen({ onSelectGame }) {
             justifyContent: 'center'
           }}
         >
-          {/* Card 1: Memory Match */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
+          {sortedActivities.map(act => {
+            const isFav = act.isFavorite;
+
+            return (
               <div
+                key={act.id}
                 style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--accent-soft)',
-                  color: 'var(--accent-color)',
+                  backgroundColor: 'var(--bg-surface)',
+                  borderRadius: '16px',
+                  border: isFav ? '3px solid #D97706' : '3px solid var(--border-color)',
+                  padding: '28px',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  position: 'relative',
+                  transition: 'transform 0.2s ease, border-color 0.2s ease'
                 }}
-                aria-hidden="true"
               >
-                <AccessibleIcon name="flower" size={40} />
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '20px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '12px',
+                        backgroundColor: 'var(--accent-soft)',
+                        color: 'var(--accent-color)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      aria-hidden="true"
+                    >
+                      <AccessibleIcon name={act.icon} size={40} />
+                    </div>
+
+                    {/* Favorite Toggle Button */}
+                    <button
+                      onClick={() => handleToggleFavorite(act.id)}
+                      aria-label={
+                        isFav
+                          ? `Remove ${act.title} from favorites`
+                          : `Mark ${act.title} as favorite`
+                      }
+                      style={{
+                        background: isFav ? '#FEF3C7' : 'var(--bg-surface-elevated)',
+                        border: isFav ? '2px solid #D97706' : '2px solid var(--border-color)',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: isFav ? '#92400E' : 'var(--text-secondary)',
+                        fontSize: 'calc(var(--font-base) * 0.85)',
+                        fontWeight: 'bold',
+                        transition: 'background-color 0.2s ease, color 0.2s ease'
+                      }}
+                    >
+                      <AccessibleIcon name="star" size={20} />
+                      <span>{isFav ? 'Favorited' : 'Add Favorite'}</span>
+                    </button>
+                  </div>
+
+                  <h4
+                    style={{
+                      fontSize: 'var(--font-h2)',
+                      color: 'var(--text-primary)',
+                      marginBottom: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {act.title}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: 'var(--font-base)',
+                      color: 'var(--text-secondary)',
+                      marginBottom: '24px',
+                      lineHeight: '1.5'
+                    }}
+                  >
+                    {act.description}
+                  </p>
+                </div>
+
+                <BigButton
+                  variant={isFav ? 'primary' : 'secondary'}
+                  onClick={() => onSelectGame(act.id)}
+                  ariaLabel={`Start ${act.title}`}
+                  style={{ width: '100%' }}
+                >
+                  {act.buttonLabel}
+                </BigButton>
               </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Memory Match
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Turn over cards to find matching pairs of familiar nature pictures, flowers, and everyday teacups.
-              </p>
-            </div>
-
-            <BigButton
-              variant="primary"
-              onClick={() => onSelectGame('memory-match')}
-              ariaLabel="Start Memory Match game"
-              style={{ width: '100%' }}
-            >
-              Play Memory Match
-            </BigButton>
-          </div>
-
-          {/* Card 2: Picture Sequencing */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--success-soft)',
-                  color: 'var(--success-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-                aria-hidden="true"
-              >
-                <AccessibleIcon name="sprout" size={40} />
-              </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Picture Stories
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Arrange simple story cards in order, such as how a seed grows into a flower or how tea is warmed.
-              </p>
-            </div>
-
-            <BigButton
-              variant="primary"
-              onClick={() => onSelectGame('picture-sequence')}
-              ariaLabel="Start Picture Stories activity"
-              style={{ width: '100%' }}
-            >
-              Play Picture Stories
-            </BigButton>
-          </div>
-
-          {/* Card 3: Number Path (Board Game) */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--accent-soft)',
-                  color: 'var(--accent-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-                aria-hidden="true"
-              >
-                <AccessibleIcon name="sun" size={40} />
-              </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Garden Path
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Roll a gentle die to stroll forward along 20 stepping stones to the rose pavilion. Always forward, with zero traps.
-              </p>
-            </div>
-
-            <BigButton
-              variant="primary"
-              onClick={() => onSelectGame('number-path')}
-              ariaLabel="Start Garden Path board game"
-              style={{ width: '100%' }}
-            >
-              Walk the Path
-            </BigButton>
-          </div>
-
-          {/* Card 4: Dice Match Activity */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--success-soft)',
-                  color: 'var(--success-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-                aria-hidden="true"
-              >
-                <AccessibleIcon name="flower" size={40} />
-              </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Dice Pattern Match
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Count the dots on a large, friendly die and match them with the correct number. A relaxing counting exercise.
-              </p>
-            </div>
-
-            <BigButton
-              variant="primary"
-              onClick={() => onSelectGame('dice-match')}
-              ariaLabel="Start Dice Pattern Match activity"
-              style={{ width: '100%' }}
-            >
-              Play Dice Match
-            </BigButton>
-          </div>
-
-          {/* Card 5: Word & Picture Match */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--accent-soft)',
-                  color: 'var(--accent-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-                aria-hidden="true"
-              >
-                <AccessibleIcon name="cup" size={40} />
-              </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Word & Picture Match
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Look at peaceful nature pictures and choose the matching word from three simple, clear choices.
-              </p>
-            </div>
-
-            <BigButton
-              variant="primary"
-              onClick={() => onSelectGame('word-match')}
-              ariaLabel="Start Word and Picture Match puzzle"
-              style={{ width: '100%' }}
-            >
-              Play Word Match
-            </BigButton>
-          </div>
-
-          {/* Card 6: A Gentle Moment */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: '16px',
-              border: '3px solid var(--border-color)',
-              padding: '28px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'transform 0.2s ease, border-color 0.2s ease'
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--accent-soft)',
-                  color: 'var(--accent-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-                aria-hidden="true"
-              >
-                <AccessibleIcon name="bloom" size={40} />
-              </div>
-              <h4
-                style={{
-                  fontSize: 'var(--font-h2)',
-                  color: 'var(--text-primary)',
-                  marginBottom: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                A Gentle Moment
-              </h4>
-              <p
-                style={{
-                  fontSize: 'var(--font-base)',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '24px',
-                  lineHeight: '1.5'
-                }}
-              >
-                Take a peaceful pause with a comforting thought or discover a fascinating little fact about nature and the world.
-              </p>
-            </div>
-
-            <BigButton
-              variant="secondary"
-              onClick={() => onSelectGame('gentle-moments')}
-              ariaLabel="Open A Gentle Moment for calm thoughts and nature discoveries"
-              style={{ width: '100%' }}
-            >
-              Enjoy a Gentle Moment
-            </BigButton>
-          </div>
+            );
+          })}
         </div>
       </section>
 

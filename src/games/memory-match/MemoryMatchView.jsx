@@ -7,10 +7,13 @@ import {
 } from './memoryMatchEngine.js';
 import { AccessibleIcon } from '../../components/common/AccessibleIcons.jsx';
 import { BigButton } from '../../components/common/BigButton.jsx';
+import { storageService } from '../../services/storageService.js';
 
 export function MemoryMatchView({ onComplete, onExit }) {
-  const [pairCount, setPairCount] = useState(4); // 4 pairs default (Gentle)
-  const [state, setState] = useState(() => createInitialState(4));
+  const initialPairCount =
+    storageService.getUserPreferences()?.gamePreferences?.['memory-match']?.preferredPairCount || 4;
+  const [pairCount, setPairCount] = useState(initialPairCount);
+  const [state, setState] = useState(() => createInitialState(initialPairCount));
   const [statusMessage, setStatusMessage] = useState('Tap any card to turn it over.');
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
@@ -75,6 +78,7 @@ export function MemoryMatchView({ onComplete, onExit }) {
     }
     const count = newPairCount || pairCount;
     setPairCount(count);
+    storageService.setPreferredPairCount(count);
     setState(createInitialState(count));
     setStatusMessage('Fresh cards dealt. Tap any card to begin.');
     setShowRestartConfirm(false);

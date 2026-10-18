@@ -1,4 +1,4 @@
-import React, { useState, Component } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { Header } from './components/common/Header.jsx';
 import { HomeScreen } from './components/home/HomeScreen.jsx';
 import { MemoryMatchView } from './games/memory-match/MemoryMatchView.jsx';
@@ -7,8 +7,13 @@ import { NumberPathView } from './games/number-path/NumberPathView.jsx';
 import { DiceMatchView } from './games/dice-match/DiceMatchView.jsx';
 import { WordMatchView } from './games/word-match/WordMatchView.jsx';
 import { GentleMomentsView } from './components/gentle-moments/GentleMomentsView.jsx';
+import { ActivityHistoryView } from './components/history/ActivityHistoryView.jsx';
+import { RemindersView } from './components/reminders/RemindersView.jsx';
+import { ReminderNotificationModal } from './components/reminders/ReminderNotificationModal.jsx';
 import { CompletionScreen } from './components/common/CompletionScreen.jsx';
 import { storageService } from './services/storageService.js';
+import { evaluatePacingRecommendation } from './services/personalizationEngine.js';
+import { checkDueReminders, sendBrowserNotification } from './services/reminderService.js';
 import { BigButton } from './components/common/BigButton.jsx';
 
 /**
@@ -66,6 +71,48 @@ class FriendlyErrorBoundary extends Component {
 export function App() {
   const [currentView, setCurrentView] = useState('home');
   const [lastGameResult, setLastGameResult] = useState(null);
+  const [activeDueReminder, setActiveDueReminder] = useState(null);
+
+  // Poll for due reminders every 5 seconds without disturbing current activity
+  useEffect(() => {
+    const checkReminders = () => {
+      const allReminders = storageService.getReminders();
+      const dueList = checkDueReminders(allReminders, new Date());
+      if (dueList.length > 0) {
+        setActiveDueReminder(current => {
+          if (!current) {
+            // Send optional browser notification if user enabled it
+            sendBrowserNotification(dueList[0].title, {
+              body: 'A gentle daily reminder from Gentle Mind.'
+            });
+            return dueList[0];
+          }
+          return current;
+        });
+      }
+    };
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAcknowledgeDueReminder = id => {
+    storageService.acknowledgeReminder(id);
+    setActiveDueReminder(null);
+  };
+
+  const handleSnoozeDueReminder = (id, minutes = 10) => {
+    storageService.snoozeReminder(id, minutes);
+    setActiveDueReminder(null);
+  };
+
+  const handleDismissDueReminder = id => {
+    if (id) {
+      storageService.dismissReminder(id);
+    }
+    setActiveDueReminder(null);
+  };
 
   const handleGameComplete = result => {
     // Record non-diagnostic activity result
@@ -100,6 +147,10 @@ export function App() {
         return 'Word & Picture Match';
       case 'gentle-moments':
         return 'A Gentle Moment';
+      case 'history':
+        return 'Activity Journal';
+      case 'reminders':
+        return 'My Daily Reminders';
       case 'completed':
         return 'Activity Complete';
       case 'home':
@@ -149,6 +200,8 @@ export function App() {
 
   const completionDetails = getCompletionDetails();
 
+  const pacingRec = evaluatePacingRecommendation(storageService.getGameHistory());
+
   return (
     <div className="app-container">
       <a href="#main-content" className="skip-link">
@@ -159,13 +212,32 @@ export function App() {
         title={getHeaderTitle()}
         showBack={currentView !== 'home'}
         onBack={handleReturnHome}
-        backLabel="Leave Game"
+        backLabel={
+          currentView === 'gentle-moments'
+            ? 'Leave Gentle Moment'
+            : currentView === 'history'
+            ? 'Leave Journal'
+            : currentView === 'reminders'
+            ? 'Leave Reminders'
+            : 'Leave Game'
+        }
       />
 
       <main id="main-content" tabIndex="-1" style={{ flex: 1 }}>
         <FriendlyErrorBoundary onReset={handleReturnHome}>
           {currentView === 'home' && (
             <HomeScreen onSelectGame={gameId => setCurrentView(gameId)} />
+          )}
+
+          {currentView === 'reminders' && (
+            <RemindersView onExit={handleReturnHome} />
+          )}
+
+          {currentView === 'history' && (
+            <ActivityHistoryView
+              onExit={handleReturnHome}
+              onSelectGame={gameId => setCurrentView(gameId)}
+            />
           )}
 
           {currentView === 'memory-match' && (
@@ -204,7 +276,10 @@ export function App() {
           )}
 
           {currentView === 'gentle-moments' && (
-            <GentleMomentsView onExit={handleReturnHome} />
+            <GentleMomentsView
+              onExit={handleReturnHome}
+              onReturnToGame={lastGameResult ? () => setCurrentView('completed') : null}
+            />
           )}
 
           {currentView === 'completed' && lastGameResult && (
@@ -217,10 +292,21 @@ export function App() {
               onPlayAgain={handlePlayAgain}
               onReturnHome={handleReturnHome}
               onGentleMoment={() => setCurrentView('gentle-moments')}
+              pacingMessage={pacingRec.recommendRest ? pacingRec.message : null}
             />
           )}
         </FriendlyErrorBoundary>
       </main>
+
+      {/* Gentle Due Reminder In-App Alert Modal */}
+      {activeDueReminder && (
+        <ReminderNotificationModal
+          reminder={activeDueReminder}
+          onAcknowledge={handleAcknowledgeDueReminder}
+          onSnooze={handleSnoozeDueReminder}
+          onDismiss={handleDismissDueReminder}
+        />
+      )}
     </div>
   );
 }

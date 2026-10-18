@@ -4,7 +4,9 @@ import {
   getNextCalmMessage,
   getNextLittleDiscovery,
   getCalmMessageById,
-  getLittleDiscoveryById
+  getLittleDiscoveryById,
+  FALLBACK_CALM_MESSAGE,
+  FALLBACK_LITTLE_DISCOVERY
 } from '../src/games/gentle-moments/gentleMomentsEngine.js';
 
 describe('Phase 3 Integration & Content Safety Audit', () => {
@@ -60,6 +62,21 @@ describe('Phase 3 Integration & Content Safety Audit', () => {
       expect(disc).toBeDefined();
       expect(disc.id).toBeTruthy();
     }
+  });
+
+  it('ensures robust fallback handling when receiving malformed or empty items', () => {
+    // Null/undefined passed to getNext
+    expect(getNextCalmMessage(null)).toBeDefined();
+    expect(getNextLittleDiscovery(null)).toBeDefined();
+
+    // Invalid id lookups
+    expect(getCalmMessageById('nonexistent')).toBeDefined();
+    expect(getLittleDiscoveryById('nonexistent')).toBeDefined();
+
+    // Fallback constants must be safe and valid
+    expect(FALLBACK_CALM_MESSAGE.text).toBeTruthy();
+    expect(FALLBACK_LITTLE_DISCOVERY.title).toBeTruthy();
+    expect(FALLBACK_LITTLE_DISCOVERY.text).toBeTruthy();
   });
 
   it('verifies that no games or core functions are regressed', () => {
